@@ -19,16 +19,12 @@
 
 import PerfectLib
 
-#if os(OSX)
-	import Foundation
-	
-	extension String {
-		var pathComponents: [String] {
-			let url = URL(fileURLWithPath: self)
-			return url.pathComponents ?? [String]()
-		}
+extension String {
+	var routePathComponents: [String] {
+		let components = self.characters.split(separator: "/").map(String.init)
+		return components
 	}
-#endif
+}
 
 private enum RouteException: ErrorProtocol {
     case invalidRoute
@@ -59,9 +55,8 @@ public struct RouteMap: CustomStringConvertible {
 	// Returns the handler if found.
 	subscript(path: String, webResponse: HTTPResponse) -> RequestHandler? {
 		get {
-			let components = path.lowercased().pathComponents
-			var g = components.makeIterator()
-			let _ = g.next() // "/"
+			let components = path.lowercased().routePathComponents
+			let g = components.makeIterator()
 
             let method = webResponse.request.method
 			if let root = self.methodRoots[method] {
@@ -81,7 +76,7 @@ public struct RouteMap: CustomStringConvertible {
 		}
 		set {
             do {
-                try self.root.addPathSegments(generator: path.lowercased().pathComponents.makeIterator(), handler: newValue!)
+                try self.root.addPathSegments(generator: path.lowercased().routePathComponents.makeIterator(), handler: newValue!)
             } catch let e {
                 Log.error(message: self.formatException(route: path, error: e))
             }
@@ -110,11 +105,11 @@ public struct RouteMap: CustomStringConvertible {
 		set {
             do {
                 if let root = self.methodRoots[method] {
-                    try root.addPathSegments(generator: path.lowercased().pathComponents.makeIterator(), handler: newValue!)
+                    try root.addPathSegments(generator: path.lowercased().routePathComponents.makeIterator(), handler: newValue!)
                 } else {
                     let root = RouteNode()
                     self.methodRoots[method] = root
-                    try root.addPathSegments(generator: path.lowercased().pathComponents.makeIterator(), handler: newValue!)
+                    try root.addPathSegments(generator: path.lowercased().routePathComponents.makeIterator(), handler: newValue!)
                 }
             } catch let e {
                 Log.error(message: self.formatException(route: path, error: e))
