@@ -107,7 +107,7 @@ public enum HTTPResponseStatus: CustomStringConvertible {
         }
     }
     
-    static func statusFrom(code: Int) -> HTTPResponseStatus {
+    public static func statusFrom(code: Int) -> HTTPResponseStatus {
         switch code {
         case 100: return .continue
         case 101: return .switchingProtocols
