@@ -61,85 +61,60 @@ class PerfectHTTPTests: XCTestCase {
 	}
 	
 	func testMimeReaderSimple() {
-		
 		let boundary = "--6"
-		
 		var testData = Array<Dictionary<String, String>>()
 		let numTestFields = 2
-		
 		for idx in 0..<numTestFields {
 			var testDic = Dictionary<String, String>()
-			
 			testDic["name"] = "test_field_\(idx)"
-			
 			var testValue = ""
 			for _ in 1...4 {
 				testValue.append("O")
 			}
 			testDic["value"] = testValue
-			
 			testData.append(testDic)
 		}
-		
 		let file = File("/tmp/mimeReaderTest.txt")
 		do {
-			
 			try file.open(.truncate)
-			
 			for testDic in testData {
 				let _ = try file.write(string: "--" + boundary + "\r\n")
-				
 				let testName = testDic["name"]!
 				let testValue = testDic["value"]!
-				
 				let _ = try file.write(string: "Content-Disposition: form-data; name=\"\(testName)\"; filename=\"\(testName).txt\"\r\n")
 				let _ = try file.write(string: "Content-Type: text/plain\r\n\r\n")
 				let _ = try file.write(string: testValue)
 				let _ = try file.write(string: "\r\n")
 			}
-			
 			let _ = try file.write(string: "--" + boundary + "--")
-			
 			for num in 1...1 {
-				
 				file.close()
 				try file.open()
-				
 				let mimeReader = MimeReader("multipart/form-data; boundary=" + boundary)
-				
 				XCTAssertEqual(mimeReader.boundary, "--" + boundary)
-				
 				var bytes = try file.readSomeBytes(count: num)
 				while bytes.count > 0 {
 					mimeReader.addToBuffer(bytes: bytes)
 					bytes = try file.readSomeBytes(count: num)
 				}
-				
 				XCTAssertEqual(mimeReader.bodySpecs.count, testData.count)
-				
 				var idx = 0
 				for body in mimeReader.bodySpecs {
-					
 					let testDic = testData[idx]
 					idx += 1
 					XCTAssertEqual(testDic["name"]!, body.fieldName)
-					
 					let file = File(body.tmpFileName)
 					try file.open()
 					let contents = try file.readSomeBytes(count: file.size)
 					file.close()
-					
 					let decoded = UTF8Encoding.encode(bytes: contents)
 					let v = testDic["value"]!
 					XCTAssertEqual(v, decoded)
-					
 					body.cleanup()
 				}
 			}
-			
 			file.close()
 			file.delete()
-			
 		} catch let e {
 			print("Exception while testing MimeReader: \(e)")
 		}
