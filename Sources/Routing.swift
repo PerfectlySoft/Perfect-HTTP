@@ -153,18 +153,23 @@ public struct RouteMap: CustomStringConvertible {
 public struct Routing {
 
 	/// The routes which have been configured.
-	static public var Routes = RouteMap()
+	static public var Routes: RouteMap = {
+		var r = RouteMap()
+		r["**"] = {
+			request, response in
+			StaticFileHandler().handleRequest(request: request, response: response)
+		}
+		return r
+	}()
 
-	static func initialize() {
-		// add a wildcard handler for webroot access
-		// user modules can overwrite this if desired
+	static func defaultInit() {
 		Routing.Routes["**"] = {
 			request, response in
 			StaticFileHandler().handleRequest(request: request, response: response)
 		}
 	}
-
-	static func reset() {
+	
+	static func clear() {
 		Routing.Routes = RouteMap()
 	}
 	

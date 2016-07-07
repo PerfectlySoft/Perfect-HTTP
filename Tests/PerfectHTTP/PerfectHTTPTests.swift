@@ -57,7 +57,6 @@ class PerfectHTTPTests: XCTestCase {
 	
 	override func setUp() {
 		super.setUp()
-		Routing.reset()
 	}
 	
 	func testMimeReaderSimple() {
@@ -153,33 +152,25 @@ class PerfectHTTPTests: XCTestCase {
 		
 		let file = File("/tmp/mimeReaderTest.txt")
 		do {
-			
 			try file.open(.truncate)
-			
 			for testDic in testData {
-				let _ = try file.write(string: "--" + boundary + "\r\n")
-				
+				try file.write(string: "--" + boundary + "\r\n")
 				let testName = testDic["name"]!
 				let testValue = testDic["value"]!
 				let isFile = testDic["file"]
-				
 				if let _ = isFile {
-					
-					let _ = try file.write(string: "Content-Disposition: form-data; name=\"\(testName)\"; filename=\"\(testName).txt\"\r\n")
-					let _ = try file.write(string: "Content-Type: text/plain\r\n\r\n")
-					let _ = try file.write(string: testValue)
-					let _ = try file.write(string: "\r\n")
-					
+					try file.write(string: "Content-Disposition: form-data; name=\"\(testName)\"; filename=\"\(testName).txt\"\r\n")
+					try file.write(string: "Content-Type: text/plain\r\n\r\n")
+					try file.write(string: testValue)
+					try file.write(string: "\r\n")
 				} else {
-					
-					let _ = try file.write(string: "Content-Disposition: form-data; name=\"\(testName)\"\r\n\r\n")
-					let _ = try file.write(string: testValue)
-					let _ = try file.write(string: "\r\n")
+					try file.write(string: "Content-Disposition: form-data; name=\"\(testName)\"\r\n\r\n")
+					try file.write(string: testValue)
+					try file.write(string: "\r\n")
 				}
-				
 			}
 			
-			let _ = try file.write(string: "--" + boundary + "--")
+			try file.write(string: "--" + boundary + "--")
 			
 			for num in 1...2048 {
 				
@@ -233,6 +224,7 @@ class PerfectHTTPTests: XCTestCase {
 	}
 	
 	func testRoutingFound() {
+		Routing.clear()
 		Routing.Routes["/foo/bar/baz"] = { _, _ in }
 		let resp = ShimHTTPResponse()
 		let fnd = Routing.Routes["/foo/bar/baz", resp]
@@ -241,6 +233,7 @@ class PerfectHTTPTests: XCTestCase {
 	}
 	
 	func testRoutingNotFound() {
+		Routing.clear()
 		Routing.Routes["/foo/bar/baz"] = { _, _ in }
 		let resp = ShimHTTPResponse()
 		let fnd = Routing.Routes["/foo/bar/buckk", resp]
@@ -249,6 +242,7 @@ class PerfectHTTPTests: XCTestCase {
 	}
 	
 	func testRoutingWild() {
+		Routing.clear()
 		Routing.Routes["/foo/*/baz/*"] = { _, _ in }
 		let resp = ShimHTTPResponse()
 		let fnd = Routing.Routes["/foo/bar/baz/bum", resp]
@@ -257,6 +251,7 @@ class PerfectHTTPTests: XCTestCase {
 	}
 	
 	func testRoutingVars() {
+		Routing.clear()
 		Routing.Routes["/foo/{bar}/baz/{bum}"] = { _, _ in }
 		let resp = ShimHTTPResponse()
 		let req = resp.request
@@ -268,6 +263,7 @@ class PerfectHTTPTests: XCTestCase {
 	}
 	
 	func testRoutingTrailingWild1() {
+		Routing.clear()
 		Routing.Routes["/foo/**"] = { _, _ in }
 		let resp = ShimHTTPResponse()
 		do {
@@ -292,6 +288,7 @@ class PerfectHTTPTests: XCTestCase {
 	}
 	
 	func testRoutingTrailingWild2() {
+		Routing.clear()
 		Routing.Routes["**"] = { _, _ in }
 		let resp = ShimHTTPResponse()
 		do {
@@ -310,7 +307,28 @@ class PerfectHTTPTests: XCTestCase {
 		}
 	}
 	
+	func testRoutingDefaultTrailingWild() {
+		Routing.clear()
+		Routing.defaultInit()
+		let resp = ShimHTTPResponse()
+		do {
+			let fnd = Routing.Routes["/foo/bar/baz/bum", resp]
+			XCTAssert(fnd != nil)
+		}
+		
+		do {
+			let fnd = Routing.Routes["/foo/bar", resp]
+			XCTAssert(fnd != nil)
+		}
+		
+		do {
+			let fnd = Routing.Routes["/foo/", resp]
+			XCTAssert(fnd != nil)
+		}
+	}
+	
 	func testRoutingAddPerformance() {
+		Routing.clear()
 		self.measure {
 			for i in 0..<10000 {
 				Routing.Routes["/foo/\(i)/baz"] = { _, _ in }
@@ -319,12 +337,11 @@ class PerfectHTTPTests: XCTestCase {
 	}
 	
 	func testRoutingFindPerformance() {
+		Routing.clear()
 		for i in 0..<10000 {
 			Routing.Routes["/foo/\(i)/baz"] = { _, _ in }
 		}
-		
 		let resp = ShimHTTPResponse()
-		
 		self.measure {
 			for i in 0..<10000 {
 				guard let _ = Routing.Routes["/foo/\(i)/baz", resp] else {
