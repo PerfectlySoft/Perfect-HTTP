@@ -18,15 +18,16 @@
 //
 
 #if os(Linux)
-	import SwiftGlibc
+	import Foundation
 	import LinuxBridge
 	let S_IRUSR = __S_IREAD
+	let S_IRGRP	= (S_IRUSR >> 3)
+	let S_IWGRP	= (SwiftGlibc.S_IWUSR >> 3)
 	let S_IROTH = (S_IRGRP >> 3)
 	let S_IWOTH = (S_IWGRP >> 3)
 #else
 	import Darwin
 #endif
-
 import PerfectLib
 
 enum MimeReadState {
@@ -46,9 +47,9 @@ let kContentType = "Content-Type"
 
 let kPerfectTempPrefix = "perfect_upload_"
 
-let mime_cr = UInt8(13)
-let mime_lf = UInt8(10)
-let mime_dash = UInt8(45)
+let mime_cr: UInt8 = 13
+let mime_lf: UInt8 = 10
+let mime_dash: UInt8 = 45
 
 /// This class is responsible for reading multi-part POST form data, including handling file uploads.
 /// Data can be given for parsing in little bits at a time by calling the `addTobuffer` function.
@@ -87,7 +88,7 @@ public final class MimeReader {
 		public var file: File?
 		
 		init() {
-		
+			
 		}
 		
 		/// Clean up the BodySpec, possibly closing and deleting any associated temporary file.
@@ -124,7 +125,7 @@ public final class MimeReader {
 			}
 		}
 	}
-		
+	
 	func openTempFile(spec spc: BodySpec) {
 		spc.file = TemporaryFile(withPrefix: self.tempDirectory + kPerfectTempPrefix)
 		spc.tmpFileName = spc.file!.path
@@ -172,8 +173,12 @@ public final class MimeReader {
 	func pullValue(name nam: String, from: String) -> String {
 		
 		var accum = ""
-		
-		if let nameRange = from.range(of: nam + "=", options: .caseInsensitive) {
+		#if os(Linux)
+			let option = NSStringCompareOptions.caseInsensitiveSearch
+		#else  // grumble
+			let option = String.CompareOptions.caseInsensitive
+		#endif
+		if let nameRange = from.range(of: nam + "=", options: option) {
 			var start = nameRange.upperBound
 			let end = from.endIndex
 			
@@ -192,7 +197,7 @@ public final class MimeReader {
 		return accum
 	}
 	
-    @discardableResult
+	@discardableResult
 	func internalAddToBuffer(bytes byts: [UInt8]) -> MimeReadState {
 		
 		var clearBuffer = true
