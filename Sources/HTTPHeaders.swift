@@ -27,7 +27,7 @@ public enum HTTPRequestHeader {
         case ifMatch, ifModifiedSince, ifNoneMatch, ifRange, ifUnmodifiedSince
         case maxForwards, origin, pragma, proxyAuthorization, range, referer
         case te, userAgent, upgrade, via, warning, xRequestedWith, dnt
-        case xForwardedFor, xForwardedHost, xForwardedProto
+        case xAuthorization, xForwardedFor, xForwardedHost, xForwardedProto
         case frontEndHttps, xHttpMethodOverride, xATTDeviceId, xWapProfile
         case proxyConnection, xUIDH, xCsrfToken
         case custom(name: String)
@@ -71,6 +71,7 @@ public enum HTTPRequestHeader {
             case .upgrade: return "upgrade"
             case .via: return "via"
             case .warning: return "warning"
+            case .xAuthorization: return "x-authorization"
             case .xRequestedWith: return "x-requested-with"
             case .dnt: return "dnt"
             case .xForwardedFor: return "x-forwarded-for"
@@ -123,6 +124,7 @@ public enum HTTPRequestHeader {
             "warning":.warning,
             "x-requested-with":.xRequestedWith,
             "dnt":.dnt,
+            "x-authorization":.xAuthorization,
             "x-forwarded-for":.xForwardedFor,
             "x-forwarded-host":.xForwardedHost,
             "x-forwarded-proto":.xForwardedProto,
