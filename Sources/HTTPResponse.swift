@@ -17,6 +17,8 @@
 //===----------------------------------------------------------------------===//
 //
 
+import PerfectLib
+
 /// HTTP response status code/msg.
 public enum HTTPResponseStatus: CustomStringConvertible {
     case `continue`
@@ -279,8 +281,6 @@ public protocol HTTPResponse: class {
 	/// Append String data to the outgoing response.
 	/// All such data will be converted to a UTF-8 encoded [UInt8]
     func appendBody(string: String)
-	/// Encodes the Dictionary as a JSON string and converts that to a UTF-8 encoded [UInt8]
-    func setBody(json: [String:Any]) throws
 	/// Push all currently available headers and body data to the client.
 	/// May be called multiple times.
     func push(callback: (Bool) -> ())
@@ -288,4 +288,23 @@ public protocol HTTPResponse: class {
 	/// Any currently available headers and body data will be pushed to the client.
 	/// No further request related activities should be performed after calling this.
     func completed()
+}
+
+public extension HTTPResponse {
+	/// Set the bodyBytes member, clearing out any existing data.
+	func setBody(bytes: [UInt8]) {
+		self.bodyBytes.removeAll()
+		self.appendBody(bytes: bytes)
+	}
+	/// Set the String data of the outgoing response, clearing out any existing data.
+	/// All such data will be converted to a UTF-8 encoded [UInt8]
+	func setBody(string: String) {
+		self.bodyBytes.removeAll()
+		self.appendBody(string: string)
+	}
+	/// Encodes the Dictionary as a JSON string and converts that to a UTF-8 encoded [UInt8]
+	func setBody(json: [String:Any]) throws {
+		let string = try json.jsonEncodedString()
+		self.setBody(string: string)
+	}
 }
