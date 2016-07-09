@@ -18,6 +18,11 @@
 //
 
 import PerfectLib
+#if os(Linux)
+	import SwiftGlibc
+#else
+	import Darwin
+#endif
 
 /// HTTP response status code/msg.
 public enum HTTPResponseStatus: CustomStringConvertible {
@@ -274,13 +279,6 @@ public protocol HTTPResponse: class {
     func setHeader(_ named: HTTPResponseHeader.Name, value: String)
     /// Provide access to all current header values.
     var headers: AnyIterator<(HTTPResponseHeader.Name, String)> { get }
-    /// Add a cookie to the outgoing response.
-    func addCookie(_: HTTPCookie)
-    /// Append data to the bodyBytes member.
-    func appendBody(bytes: [UInt8])
-	/// Append String data to the outgoing response.
-	/// All such data will be converted to a UTF-8 encoded [UInt8]
-    func appendBody(string: String)
 	/// Push all currently available headers and body data to the client.
 	/// May be called multiple times.
     func push(callback: (Bool) -> ())
@@ -291,6 +289,17 @@ public protocol HTTPResponse: class {
 }
 
 public extension HTTPResponse {
+	/// Append data to the bodyBytes member.
+	func appendBody(bytes: [UInt8]) {
+		bodyBytes.append(contentsOf: bytes)
+	}
+	
+	/// Append String data to the outgoing response.
+	/// All such data will be converted to a UTF-8 encoded [UInt8]
+	func appendBody(string: String) {
+		bodyBytes.append(contentsOf: [UInt8](string.utf8))
+	}
+	
 	/// Set the bodyBytes member, clearing out any existing data.
 	func setBody(bytes: [UInt8]) {
 		self.bodyBytes.removeAll()
@@ -306,5 +315,76 @@ public extension HTTPResponse {
 	func setBody(json: [String:Any]) throws {
 		let string = try json.jsonEncodedString()
 		self.setBody(string: string)
+	}
+	/// Add a cookie to the outgoing response.
+	func addCookie(_ cookie: HTTPCookie) {
+		var cookieLine = ""
+		cookieLine.append(cookie.name!.stringByEncodingURL)
+		cookieLine.append("=")
+		cookieLine.append(cookie.value!.stringByEncodingURL)
+		
+		if let expires = cookie.expires {
+			switch expires {
+			case .session: ()
+			case .absoluteDate(let date):
+				cookieLine.append(";expires=" + date)
+			case .absoluteSeconds(let seconds):
+				let formattedDate = (seconds*60).secondsToDate()
+					.formatDate(format: "%a, %d-%b-%Y %T GMT")  ?? "INVALID DATE"
+				cookieLine.append(";expires=" + formattedDate)
+			case .relativeSeconds(let seconds):
+				let formattedDate = (Double.now + (seconds*60).secondsToDate())
+					.formatDate(format: "%a, %d-%b-%Y %T GMT") ?? "INVALID DATE"
+				cookieLine.append(";expires=" + formattedDate)
+			}
+		}
+		if let path = cookie.path {
+			cookieLine.append("; path=" + path)
+		}
+		if let domain = cookie.domain {
+			cookieLine.append("; domain=" + domain)
+		}
+		if let secure = cookie.secure {
+			if secure == true {
+				cookieLine.append("; secure")
+			}
+		}
+		if let httpOnly = cookie.httpOnly {
+			if httpOnly == true {
+				cookieLine.append("; HttpOnly")
+			}
+		}
+		addHeader(.setCookie, value: cookieLine)
+	}
+}
+
+extension Double {
+	static var now: Double {
+		var posixTime = timeval()
+		gettimeofday(&posixTime, nil)
+		return Double((posixTime.tv_sec * 1000) + (Int(posixTime.tv_usec)/1000))
+	}
+	
+	func formatDate(format: String) -> String? {
+		var t = tm()
+		var time = time_t(self / 1000.0)
+		gmtime_r(&time, &t)
+		let maxResults = 1024
+		let results = UnsafeMutablePointer<Int8>(allocatingCapacity:  maxResults)
+		defer {
+			results.deallocateCapacity(maxResults)
+		}
+		let res = strftime(results, maxResults, format, &t)
+		if res > 0 {
+			let formatted = String(validatingUTF8: results)
+			return formatted
+		}
+		return nil
+	}
+}
+
+extension Int {
+	func secondsToDate() -> Double {
+		return Double(self * 1000)
 	}
 }
