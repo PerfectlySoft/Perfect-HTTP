@@ -351,6 +351,16 @@ class PerfectHTTPTests: XCTestCase {
 			}
 		}
 	}
+	
+	func testFormatDate() {
+		let dateThen = 0.0
+		let formatStr = "%a, %d-%b-%Y %T GMT"
+		if let result = dateThen.formatDate(format: formatStr){
+			XCTAssertEqual(result, "Thu, 01-Jan-1970 00:00:00 GMT")
+		} else {
+			XCTAssert(false, "Bad date format")
+		}
+	}
 
     static var allTests : [(String, (PerfectHTTPTests) -> () throws -> Void)] {
         return [
@@ -363,7 +373,8 @@ class PerfectHTTPTests: XCTestCase {
 			("testRoutingAddPerformance", testRoutingAddPerformance),
 			("testRoutingFindPerformance", testRoutingFindPerformance),
 			("testRoutingTrailingWild1", testRoutingTrailingWild1),
-			("testRoutingTrailingWild2", testRoutingTrailingWild2)
+			("testRoutingTrailingWild2", testRoutingTrailingWild2),
+			("testFormatDate", testFormatDate)
         ]
     }
 }
