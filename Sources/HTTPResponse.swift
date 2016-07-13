@@ -224,9 +224,9 @@ public struct HTTPCookie {
     }
     
     /// Cookie name
-    public let name: String?
+    public let name: String
     /// Cookie value
-    public let value: String?
+    public let value: String
     /// Cookie domain
     public let domain: String?
     /// Cookie expiration
@@ -239,8 +239,8 @@ public struct HTTPCookie {
     public let httpOnly: Bool?
     
     /// Cookie public initializer
-    public init(name: String?,
-                value: String?,
+    public init(name: String,
+                value: String,
                 domain: String?,
                 expires: Expiration?,
                 path: String?,
@@ -319,9 +319,9 @@ public extension HTTPResponse {
 	/// Add a cookie to the outgoing response.
 	func addCookie(_ cookie: HTTPCookie) {
 		var cookieLine = ""
-		cookieLine.append(cookie.name!.stringByEncodingURL)
+		cookieLine.append(cookie.name.stringByEncodingURL)
 		cookieLine.append("=")
-		cookieLine.append(cookie.value!.stringByEncodingURL)
+		cookieLine.append(cookie.value.stringByEncodingURL)
 		
 		if let expires = cookie.expires {
 			switch expires {
