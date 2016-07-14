@@ -395,7 +395,7 @@ class RouteVariable: RouteNode {
 // -- old --
 // ALL code below this is obsolete but remains to provide compatability 1.0 based solutions.
 // For 1.0 compatability only.
-public var compatRoutes = Routes()
+public var compatRoutes: Routes?
 
 // Holds the registered routes.
 @available(*, deprecated, message: "Use new Routes API instead")
@@ -404,7 +404,7 @@ public struct RouteMap: CustomStringConvertible {
 	public typealias RequestHandler = (HTTPRequest, HTTPResponse) -> ()
 
 	public var description: String {
-		return compatRoutes.navigator.description
+		return compatRoutes?.navigator.description ?? "no routes"
 	}
 	
 	public subscript(path: String) -> RequestHandler? {
@@ -415,7 +415,10 @@ public struct RouteMap: CustomStringConvertible {
 			guard let handler = newValue else {
 				return
 			}
-            compatRoutes.add(method: .get, uri: path, handler: handler)
+			if nil == compatRoutes {
+				compatRoutes = Routes()
+			}
+            compatRoutes?.add(method: .get, uri: path, handler: handler)
 		}
 	}
 
@@ -438,7 +441,10 @@ public struct RouteMap: CustomStringConvertible {
 			guard let handler = newValue else {
 				return
 			}
-			compatRoutes.add(method: method, uri: path, handler: handler)
+			if nil == compatRoutes {
+				compatRoutes = Routes()
+			}
+			compatRoutes?.add(method: method, uri: path, handler: handler)
 		}
 	}
 
