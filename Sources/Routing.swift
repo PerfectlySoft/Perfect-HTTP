@@ -69,6 +69,13 @@ public struct Routes {
 		self.add(Route(method: method, uri: self.baseUri + Routes.sanitizeUri(uri), handler: handler))
 	}
 	
+	/// Add the given method, uris and handler as a route.
+	public mutating func add(method: HTTPMethod, uris: [String], handler: RequestHandler) {
+		for uri in uris {
+			self.add(method: method, uri: uri, handler: handler)
+		}
+	}
+	
 	static func sanitizeUri(_ uri: String) -> String {
 		let split = uri.characters.split(separator: "/").map(String.init)
 		return "/" + split.joined(separator: "/")
