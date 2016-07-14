@@ -66,7 +66,7 @@ public struct Routes {
 	
 	/// Add the given method, uri and handler as a route.
 	public mutating func add(method: HTTPMethod, uri: String, handler: RequestHandler) {
-		self.add(Route(method: method, uri: self.baseUri + Routes.sanitizeUri(uri), handler: handler))
+		self.add(Route(method: method, uri: uri, handler: handler))
 	}
 	
 	/// Add the given method, uris and handler as a route.
