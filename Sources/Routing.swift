@@ -23,38 +23,48 @@ import PerfectLib
 public typealias RequestHandler = (HTTPRequest, HTTPResponse) -> ()
 
 /// Object which maps uris to handler.
+/// RouteNavigators are given to the HTTPServer to control its content generation.
 public protocol RouteNavigator: CustomStringConvertible {
-	
-	func findHandler(uri: String, webResponse: HTTPResponse) -> RequestHandler?
+	// Given a URI and HTTPRequest, return the handler or nil if there was none.
+	func findHandler(uri: String, webRequest: HTTPRequest) -> RequestHandler?
 }
 
+/// Combines a method, uri and handler
 public struct Route {
 	let method: HTTPMethod
 	let uri: String
 	let handler: RequestHandler
 }
 
+/// A group of routes. Add one or more routes to this object then call its navigator property to get the RouteNavigator.
+/// Can be created with a baseUri. All routes which are added will have their URIs prefixed with this value.
 public struct Routes {
 	var routes = [Route]()
 	let baseUri: String
 	
+	/// Initialize with no baseUri.
 	public init() {
 		self.baseUri = ""
 	}
+	
+	// Initialize with a baseUri.
 	public init(baseUri: String) {
 		self.baseUri = Routes.sanitizeUri(baseUri)
 	}
 	
+	/// Add all the routes in the Routes object to this one.
 	public mutating func add(routes: Routes) {
 		for route in routes.routes {
 			self.add(route)
 		}
 	}
 	
+	/// Add one Route to this object.
 	public mutating func add(_ route: Route) {
 		routes.append(Route(method: route.method, uri: self.baseUri + Routes.sanitizeUri(route.uri), handler: route.handler))
 	}
 	
+	/// Add the given method, uri and handler as a route.
 	public mutating func add(method: HTTPMethod, uri: String, handler: RequestHandler) {
 		self.add(Route(method: method, uri: self.baseUri + Routes.sanitizeUri(uri), handler: handler))
 	}
@@ -75,14 +85,14 @@ public struct Routes {
 			return s
 		}
 		
-		func findHandler(uri: String, webResponse: HTTPResponse) -> RequestHandler? {
+		func findHandler(uri: String, webRequest: HTTPRequest) -> RequestHandler? {
 			let components = uri.lowercased().routePathComponents
 			let g = components.makeIterator()
-			let method = webResponse.request.method
+			let method = webRequest.method
 			guard let root = self.map[method] else {
 				return nil
 			}
-			guard let handler = root.findHandler(currentComponent: "", generator: g, webResponse: webResponse) else {
+			guard let handler = root.findHandler(currentComponent: "", generator: g, webRequest: webRequest) else {
 				return nil
 			}
 			return handler
@@ -93,6 +103,7 @@ public struct Routes {
 		return "\(error) - \(r)"
 	}
 	
+	/// Return the RouteNavigator for this object.
 	public var navigator: RouteNavigator {
 		var map = [HTTPMethod:RouteNode]()
 		for route in routes {
@@ -179,35 +190,35 @@ class RouteNode: CustomStringConvertible {
 		return s
 	}
 	
-	func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webResponse: HTTPResponse) -> RouteMap.RequestHandler? {
+	func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> RouteMap.RequestHandler? {
 		var m = generator
 		if let p = m.next() where p != "/" {
 			
 			// variables
 			for node in self.variables {
-				if let h = node.findHandler(currentComponent: p, generator: m, webResponse: webResponse) {
-					return self.successfulRoute(currentComponent: curComp, handler: node.successfulRoute(currentComponent: p, handler: h, webResponse: webResponse), webResponse: webResponse)
+				if let h = node.findHandler(currentComponent: p, generator: m, webRequest: webRequest) {
+					return self.successfulRoute(currentComponent: curComp, handler: node.successfulRoute(currentComponent: p, handler: h, webRequest: webRequest), webRequest: webRequest)
 				}
 			}
 			
 			// paths
 			if let node = self.subNodes[p] {
-				if let h = node.findHandler(currentComponent: p, generator: m, webResponse: webResponse) {
-					return self.successfulRoute(currentComponent: curComp, handler: node.successfulRoute(currentComponent: p, handler: h, webResponse: webResponse), webResponse: webResponse)
+				if let h = node.findHandler(currentComponent: p, generator: m, webRequest: webRequest) {
+					return self.successfulRoute(currentComponent: curComp, handler: node.successfulRoute(currentComponent: p, handler: h, webRequest: webRequest), webRequest: webRequest)
 				}
 			}
 			
 			// wildcard
 			if let node = self.wildCard {
-				if let h = node.findHandler(currentComponent: p, generator: m, webResponse: webResponse) {
-					return self.successfulRoute(currentComponent: curComp, handler: node.successfulRoute(currentComponent: p, handler: h, webResponse: webResponse), webResponse: webResponse)
+				if let h = node.findHandler(currentComponent: p, generator: m, webRequest: webRequest) {
+					return self.successfulRoute(currentComponent: curComp, handler: node.successfulRoute(currentComponent: p, handler: h, webRequest: webRequest), webRequest: webRequest)
 				}
 			}
 			
 			// trailing wildcard
 			if let node = self.trailingWildCard {
-				if let h = node.findHandler(currentComponent: p, generator: m, webResponse: webResponse) {
-					return self.successfulRoute(currentComponent: curComp, handler: node.successfulRoute(currentComponent: p, handler: h, webResponse: webResponse), webResponse: webResponse)
+				if let h = node.findHandler(currentComponent: p, generator: m, webRequest: webRequest) {
+					return self.successfulRoute(currentComponent: curComp, handler: node.successfulRoute(currentComponent: p, handler: h, webRequest: webRequest), webRequest: webRequest)
 				}
 			}
 			
@@ -218,22 +229,22 @@ class RouteNode: CustomStringConvertible {
 		} else {
 			// wildcards
 			if let node = self.wildCard {
-				if let h = node.findHandler(currentComponent: "", generator: m, webResponse: webResponse) {
-					return self.successfulRoute(currentComponent: curComp, handler: node.successfulRoute(currentComponent: "", handler: h, webResponse: webResponse), webResponse: webResponse)
+				if let h = node.findHandler(currentComponent: "", generator: m, webRequest: webRequest) {
+					return self.successfulRoute(currentComponent: curComp, handler: node.successfulRoute(currentComponent: "", handler: h, webRequest: webRequest), webRequest: webRequest)
 				}
 			}
 			
 			// trailing wildcard
 			if let node = self.trailingWildCard {
-				if let h = node.findHandler(currentComponent: "", generator: m, webResponse: webResponse) {
-					return self.successfulRoute(currentComponent: curComp, handler: node.successfulRoute(currentComponent: "", handler: h, webResponse: webResponse), webResponse: webResponse)
+				if let h = node.findHandler(currentComponent: "", generator: m, webRequest: webRequest) {
+					return self.successfulRoute(currentComponent: curComp, handler: node.successfulRoute(currentComponent: "", handler: h, webRequest: webRequest), webRequest: webRequest)
 				}
 			}
 		}
 		return nil
 	}
 	
-	func successfulRoute(currentComponent _: String, handler: RouteMap.RequestHandler, webResponse: HTTPResponse) -> RouteMap.RequestHandler {
+	func successfulRoute(currentComponent _: String, handler: RouteMap.RequestHandler, webRequest: HTTPRequest) -> RouteMap.RequestHandler {
 		return handler
 	}
 	
@@ -316,7 +327,6 @@ class RouteWildCard: RouteNode {
 	
 	override func descriptionTabbed(_ tabCount: Int) -> String {
 		var s = "/*"
-		
 		if let _ = self.handler {
 			s.append("+h\n")
 		} else {
@@ -325,14 +335,12 @@ class RouteWildCard: RouteNode {
 		s.append(self.descriptionTabbedInner(tabCount))
 		return s
 	}
-	
 }
 
 class RouteTrailingWildCard: RouteWildCard {
 	
 	override func descriptionTabbed(_ tabCount: Int) -> String {
 		var s = "/**"
-		
 		if let _ = self.handler {
 			s.append("+h\n")
 		} else {
@@ -351,7 +359,7 @@ class RouteTrailingWildCard: RouteWildCard {
 		}
 	}
 	
-	override func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webResponse: HTTPResponse) -> RouteMap.RequestHandler? {
+	override func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> RouteMap.RequestHandler? {
 		return self.handler
 	}
 }
@@ -365,7 +373,6 @@ class RouteVariable: RouteNode {
 	
 	override func descriptionTabbed(_ tabCount: Int) -> String {
 		var s = "/{\(self.name)}"
-		
 		if let _ = self.handler {
 			s.append("+h\n")
 		} else {
@@ -375,21 +382,20 @@ class RouteVariable: RouteNode {
 		return s
 	}
 	
-	override func successfulRoute(currentComponent currComp: String, handler: RouteMap.RequestHandler, webResponse: HTTPResponse) -> RouteMap.RequestHandler {
-		let request = webResponse.request
+	override func successfulRoute(currentComponent currComp: String, handler: RouteMap.RequestHandler, webRequest: HTTPRequest) -> RouteMap.RequestHandler {
 		if let decodedComponent = currComp.stringByDecodingURL {
-			request.urlVariables[self.name] = decodedComponent
+			webRequest.urlVariables[self.name] = decodedComponent
 		} else {
-			request.urlVariables[self.name] = currComp
+			webRequest.urlVariables[self.name] = currComp
 		}
 		return handler
 	}
 }
 
 // -- old --
-
-// for compatability only
-var compatRoutes = Routes()
+// ALL code below this is obsolete but remains to provide compatability 1.0 based solutions.
+// For 1.0 compatability only.
+public var compatRoutes = Routes()
 
 // Holds the registered routes.
 @available(*, deprecated, message: "Use new Routes API instead")

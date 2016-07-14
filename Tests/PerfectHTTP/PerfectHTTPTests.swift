@@ -224,127 +224,109 @@ class PerfectHTTPTests: XCTestCase {
 	}
 	
 	func testRoutingFound() {
-		Routing.clear()
-		Routing.Routes["/foo/bar/baz"] = { _, _ in }
-		let resp = ShimHTTPResponse()
-		let fnd = Routing.Routes["/foo/bar/baz", resp]
-		
+		let uri = "/foo/bar/baz"
+		var r = Routes()
+		r.add(method: .get, uri: uri, handler: { _, _ in })
+		let req = ShimHTTPRequest()
+		let fnd = r.navigator.findHandler(uri: uri, webRequest: req)
 		XCTAssert(fnd != nil)
 	}
 	
 	func testRoutingNotFound() {
-		Routing.clear()
-		Routing.Routes["/foo/bar/baz"] = { _, _ in }
-		let resp = ShimHTTPResponse()
-		let fnd = Routing.Routes["/foo/bar/buckk", resp]
-		
+		let uri = "/foo/bar/baz"
+		var r = Routes()
+		r.add(method: .get, uri: uri, handler: { _, _ in })
+		let req = ShimHTTPRequest()
+		let fnd = r.navigator.findHandler(uri: uri+"z", webRequest: req)
 		XCTAssert(fnd == nil)
 	}
 	
 	func testRoutingWild() {
-		Routing.clear()
-		Routing.Routes["/foo/*/baz/*"] = { _, _ in }
-		let resp = ShimHTTPResponse()
-		let fnd = Routing.Routes["/foo/bar/baz/bum", resp]
-		
+		let uri = "/foo/*/baz/*"		
+		var r = Routes()
+		r.add(method: .get, uri: uri, handler: { _, _ in })
+		let req = ShimHTTPRequest()
+		let fnd = r.navigator.findHandler(uri: "/foo/bar/baz/bum", webRequest: req)
 		XCTAssert(fnd != nil)
 	}
 	
 	func testRoutingVars() {
-		Routing.clear()
-		Routing.Routes["/foo/{bar}/baz/{bum}"] = { _, _ in }
-		let resp = ShimHTTPResponse()
-		let req = resp.request
-		let fnd = Routing.Routes["/foo/1/baz/2", resp]
-		
+		let uri = "/foo/{bar}/baz/{bum}"
+		var r = Routes()
+		r.add(method: .get, uri: uri, handler: { _, _ in })
+		let req = ShimHTTPRequest()
+		let fnd = r.navigator.findHandler(uri: "/foo/1/baz/2", webRequest: req)
 		XCTAssert(fnd != nil)
 		XCTAssert(req.urlVariables["bar"] == "1")
 		XCTAssert(req.urlVariables["bum"] == "2")
 	}
 	
 	func testRoutingTrailingWild1() {
-		Routing.clear()
-		Routing.Routes["/foo/**"] = { _, _ in }
-		let resp = ShimHTTPResponse()
+		let uri = "/foo/**"
+		var r = Routes()
+		r.add(method: .get, uri: uri, handler: { _, _ in })
+		let req = ShimHTTPRequest()
 		do {
-			let fnd = Routing.Routes["/foo/bar/baz/bum", resp]
+			let fnd = r.navigator.findHandler(uri: "/foo/bar/baz/bum", webRequest: req)
 			XCTAssert(fnd != nil)
 		}
 		
 		do {
-			let fnd = Routing.Routes["/foo/bar", resp]
+			let fnd = r.navigator.findHandler(uri: "/foo/bar", webRequest: req)
 			XCTAssert(fnd != nil)
 		}
 		
 		do {
-			let fnd = Routing.Routes["/foo/", resp]
+			let fnd = r.navigator.findHandler(uri: "/foo/", webRequest: req)
 			XCTAssert(fnd != nil)
 		}
 		
 		do {
-			let fnd = Routing.Routes["/fooo0/", resp]
+			let fnd = r.navigator.findHandler(uri: "/fooo0/", webRequest: req)
 			XCTAssert(fnd == nil)
 		}
 	}
 	
 	func testRoutingTrailingWild2() {
-		Routing.clear()
-		Routing.Routes["**"] = { _, _ in }
-		let resp = ShimHTTPResponse()
+		let uri = "**"
+		var r = Routes()
+		r.add(method: .get, uri: uri, handler: { _, _ in })
+		let req = ShimHTTPRequest()
 		do {
-			let fnd = Routing.Routes["/foo/bar/baz/bum", resp]
+			let fnd = r.navigator.findHandler(uri: "/foo/bar/baz/bum", webRequest: req)
 			XCTAssert(fnd != nil)
 		}
 		
 		do {
-			let fnd = Routing.Routes["/foo/bar", resp]
+			let fnd = r.navigator.findHandler(uri: "/foo/bar", webRequest: req)
 			XCTAssert(fnd != nil)
 		}
 		
 		do {
-			let fnd = Routing.Routes["/foo/", resp]
-			XCTAssert(fnd != nil)
-		}
-	}
-	
-	func testRoutingDefaultTrailingWild() {
-		Routing.clear()
-		Routing.defaultInit()
-		let resp = ShimHTTPResponse()
-		do {
-			let fnd = Routing.Routes["/foo/bar/baz/bum", resp]
-			XCTAssert(fnd != nil)
-		}
-		
-		do {
-			let fnd = Routing.Routes["/foo/bar", resp]
-			XCTAssert(fnd != nil)
-		}
-		
-		do {
-			let fnd = Routing.Routes["/foo/", resp]
+			let fnd = r.navigator.findHandler(uri: "/foo/", webRequest: req)
 			XCTAssert(fnd != nil)
 		}
 	}
 	
 	func testRoutingAddPerformance() {
-		Routing.clear()
+		var r = Routes()
 		self.measure {
 			for i in 0..<10000 {
-				Routing.Routes["/foo/\(i)/baz"] = { _, _ in }
+				r.add(method: .get, uri: "/foo/\(i)/baz", handler: { _, _ in })
 			}
 		}
 	}
 	
 	func testRoutingFindPerformance() {
-		Routing.clear()
+		var r = Routes()
 		for i in 0..<10000 {
-			Routing.Routes["/foo/\(i)/baz"] = { _, _ in }
+			r.add(method: .get, uri: "/foo/\(i)/baz", handler: { _, _ in })
 		}
-		let resp = ShimHTTPResponse()
+		let req = ShimHTTPRequest()
+		let navigator = r.navigator
 		self.measure {
 			for i in 0..<10000 {
-				guard let _ = Routing.Routes["/foo/\(i)/baz", resp] else {
+				guard let _ = navigator.findHandler(uri: "/foo/\(i)/baz", webRequest: req) else {
 					XCTAssert(false, "Failed to find route")
 					break
 				}
