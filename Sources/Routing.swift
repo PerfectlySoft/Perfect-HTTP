@@ -77,14 +77,14 @@ public struct Routes {
 	}
 	
 	/// Add the given uri and handler as a route. 
-	/// This will add the route got both GET and POST methods.
+	/// This will add the route for both GET and POST methods.
 	public mutating func add(uri: String, handler: RequestHandler) {
 		self.add(method: .get, uri: uri, handler: handler)
 		self.add(method: .post, uri: uri, handler: handler)
 	}
 	
 	/// Add the given method, uris and handler as a route.
-	/// This will add the route got both GET and POST methods.
+	/// This will add the route for both GET and POST methods.
 	public mutating func add(uris: [String], handler: RequestHandler) {
 		for uri in uris {
 			self.add(uri: uri, handler: handler)
