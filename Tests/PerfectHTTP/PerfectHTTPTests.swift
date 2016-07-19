@@ -223,13 +223,29 @@ class PerfectHTTPTests: XCTestCase {
 		}
 	}
 	
-	func testRoutingFound() {
+	func testRoutingFound1() {
 		let uri = "/foo/bar/baz"
 		var r = Routes()
 		r.add(method: .get, uri: uri, handler: { _, _ in })
 		let req = ShimHTTPRequest()
 		let fnd = r.navigator.findHandler(uri: uri, webRequest: req)
 		XCTAssert(fnd != nil)
+	}
+	
+	func testRoutingFound2() {
+		let uri = "/foo/bar/baz"
+		var r = Routes()
+		r.add(uri: uri, handler: { _, _ in })
+		let req = ShimHTTPRequest()
+		do {
+			let fnd = r.navigator.findHandler(uri: uri, webRequest: req)
+			XCTAssert(fnd != nil)
+		}
+		req.method = .post
+		do {
+			let fnd = r.navigator.findHandler(uri: uri, webRequest: req)
+			XCTAssert(fnd != nil)
+		}
 	}
 	
 	func testRoutingNotFound() {
@@ -348,7 +364,8 @@ class PerfectHTTPTests: XCTestCase {
         return [
 			("testMimeReader", testMimeReader),
 			("testMimeReaderSimple", testMimeReaderSimple),
-			("testRoutingFound", testRoutingFound),
+			("testRoutingFound1", testRoutingFound1),
+			("testRoutingFound2", testRoutingFound2),
 			("testRoutingNotFound", testRoutingNotFound),
 			("testRoutingWild", testRoutingWild),
 			("testRoutingVars", testRoutingVars),
