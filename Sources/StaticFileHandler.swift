@@ -64,9 +64,12 @@ extension UInt8 {
 public struct StaticFileHandler {
 	
 	let chunkedBufferSize = 1024*200
+	let documentRoot: String
 	
-    /// Public initializer
-	public init() {}
+	/// Public initializer given a document root.
+	public init(documentRoot: String) {
+		self.documentRoot = documentRoot
+	}
 	
     /// Main entry point. A registered URL handler should call this and pass the request and response objects.
     /// After calling this, the StaticFileHandler owns the request and will handle it until completion.
@@ -75,7 +78,6 @@ public struct StaticFileHandler {
 		if path[path.index(before: path.endIndex)] == "/" {
 			path.append("index.html") // !FIX! needs to be configurable
 		}
-		let documentRoot = req.documentRoot
 		let file = File(documentRoot + "/" + path)
         
         func fnf(msg: String) {
