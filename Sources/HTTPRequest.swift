@@ -27,7 +27,7 @@ public protocol HTTPRequest: class {
     var method: HTTPMethod { get set }
 	/// The request path.
     var path: String { get set }
-	/// The partsed and decoded query/search arguments.
+	/// The parsed and decoded query/search arguments.
     var queryParams: [(String, String)] { get }
 	/// The HTTP protocol version.
     var protocolVersion: (Int, Int) { get }
