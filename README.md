@@ -5,7 +5,7 @@ Base HTTP Support for Perfect
 
 This repository is an indirect dependency for the Perfect HTTP 1.1 and FastCGI servers. You should not need to add it as a direct dependency in your projects. Please look at [Perfect](https://github.com/PerfectlySoft/Perfect) for more details.
 
-# HTTPRequest and HTTPResponse
+## HTTPRequest and HTTPResponse
 
 When handling a request, all client interaction is performed through the provided HTTPRequest and HTTPResponse objects. 
 
@@ -15,7 +15,7 @@ HTTPRequest will handle parsing and decoding all "application/x-www-form-urlenco
 
 The HTTPResponse object contains all outgoing response data. This consists of the HTTP status code and message, the HTTP headers and any response body data. HTTPResponse also contains the ability to stream or push chunks of response data to the client and to complete or terminate the request.
 
-# Routing
+## Routing
 
 Routing, in Perfect, refers to the act of directing a request to its proper handler. Requests are routed based on two pieces of information: the HTTP request method and the request path. A route refers to a HTTP method, path and handler combination. Routes are created and added to the server before it starts listening for connections. This can be called several times to add more routes if needed. Routes can not be added or modified after a server has started listening for requests.
 
