@@ -385,11 +385,7 @@ class RouteTrailingWildCard: RouteWildCard {
 	}
 	
 	override func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> RouteMap.RequestHandler? {
-		var trailingVar = "/\(curComp)"
-		var g = generator
-		while let next = g.next() {
-			trailingVar.append("/\(next)")
-		}
+		let trailingVar = "/\(curComp)" + generator.map { "/" + $0 }.joined(separator: "")
 		webRequest.urlVariables[routeTrailingWildcardKey] = trailingVar
 		return self.handler
 	}
