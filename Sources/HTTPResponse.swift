@@ -293,13 +293,11 @@ public extension HTTPResponse {
 	func appendBody(bytes: [UInt8]) {
 		bodyBytes.append(contentsOf: bytes)
 	}
-	
 	/// Append String data to the outgoing response.
 	/// All such data will be converted to a UTF-8 encoded [UInt8]
 	func appendBody(string: String) {
 		bodyBytes.append(contentsOf: [UInt8](string.utf8))
 	}
-	
 	/// Set the bodyBytes member, clearing out any existing data.
 	func setBody(bytes: [UInt8]) {
 		self.bodyBytes.removeAll()

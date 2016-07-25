@@ -285,6 +285,7 @@ class PerfectHTTPTests: XCTestCase {
 		do {
 			let fnd = r.navigator.findHandler(uri: "/foo/bar/baz/bum", webRequest: req)
 			XCTAssert(fnd != nil)
+			XCTAssert(req.urlVariables[routeTrailingWildcardKey] == "/bar/baz/bum")
 		}
 		
 		do {
@@ -311,6 +312,7 @@ class PerfectHTTPTests: XCTestCase {
 		do {
 			let fnd = r.navigator.findHandler(uri: "/foo/bar/baz/bum", webRequest: req)
 			XCTAssert(fnd != nil)
+			XCTAssert(req.urlVariables[routeTrailingWildcardKey] == "/foo/bar/baz/bum")
 		}
 		
 		do {
