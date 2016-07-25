@@ -29,7 +29,7 @@ public protocol HTTPRequest: class {
     var path: String { get set }
 	/// The parsed and decoded query/search arguments.
     var queryParams: [(String, String)] { get }
-	/// The HTTP protocol version.
+	/// The HTTP protocol version. For example (1, 0), (1, 1), (2, 0)
     var protocolVersion: (Int, Int) { get }
 	/// The IP address and connecting port of the client.
     var remoteAddress: (host: String, port: UInt16) { get }
@@ -78,8 +78,8 @@ public protocol HTTPRequest: class {
 
 public extension HTTPRequest {
     
-    /// Returns the first GET or POST parameter with the given name
-    /// Returns the supplied default value if the parameter was not found
+    /// Returns the first GET or POST parameter with the given name.
+    /// Returns the supplied default value if the parameter was not found.
     public func param(name: String, defaultValue: String? = nil) -> String? {
         for p in self.queryParams
             where p.0 == name {
@@ -92,13 +92,13 @@ public extension HTTPRequest {
         return defaultValue
     }
     
-    /// Returns all GET or POST parameters with the given name
+    /// Returns all GET or POST parameters with the given name.
     public func params(named: String) -> [String] {
         let a = self.params().filter { $0.0 == named }.map { $0.1 }
         return a
     }
     
-    /// Returns all GET or POST parameters
+    /// Returns all GET or POST parameters.
     public func params() -> [(String, String)] {
         let a = self.queryParams + self.postParams
         return a
@@ -106,7 +106,7 @@ public extension HTTPRequest {
 }
 
 public extension HTTPRequest {
-    /// Returns the full request URI
+    /// Returns the full request URI.
     public var uri: String {
         if self.queryParams.count == 0 {
             return self.path
