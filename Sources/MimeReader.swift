@@ -171,13 +171,8 @@ public final class MimeReader {
 	}
 	
 	func pullValue(name nam: String, from: String) -> String {
-		
 		var accum = ""
-		#if os(Linux)
-			let option = NSStringCompareOptions.caseInsensitiveSearch
-		#else  // grumble
-			let option = String.CompareOptions.caseInsensitive
-		#endif
+		let option = String.CompareOptions.caseInsensitive
 		if let nameRange = from.range(of: nam + "=", options: option) {
 			var start = nameRange.upperBound
 			let end = from.endIndex

@@ -29,6 +29,9 @@ public protocol RouteNavigator: CustomStringConvertible {
 	func findHandler(uri: String, webRequest: HTTPRequest) -> RequestHandler?
 }
 
+// The url variable key under which the remaining path in a trailing wild card will be placed.
+public let routeTrailingWildcardKey = "_trailing_wildcard_"
+
 /// Combines a method, uri and handler
 public struct Route {
 	let method: HTTPMethod
@@ -121,7 +124,7 @@ public struct Routes {
 		}
 	}
 	
-	private func formatException(route r: String, error: ErrorProtocol) -> String {
+	private func formatException(route r: String, error: Error) -> String {
 		return "\(error) - \(r)"
 	}
 	
@@ -160,7 +163,7 @@ extension String {
 	}
 }
 
-private enum RouteException: ErrorProtocol {
+private enum RouteException: Error {
 	case invalidRoute
 }
 
@@ -214,7 +217,7 @@ class RouteNode: CustomStringConvertible {
 	
 	func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> RouteMap.RequestHandler? {
 		var m = generator
-		if let p = m.next() where p != "/" {
+		if let p = m.next(), p != "/" {
 			
 			// variables
 			for node in self.variables {
@@ -382,6 +385,8 @@ class RouteTrailingWildCard: RouteWildCard {
 	}
 	
 	override func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> RouteMap.RequestHandler? {
+		let trailingVar = "/\(curComp)" + generator.map { "/" + $0 }.joined(separator: "")
+		webRequest.urlVariables[routeTrailingWildcardKey] = trailingVar
 		return self.handler
 	}
 }

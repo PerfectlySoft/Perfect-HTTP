@@ -24,7 +24,7 @@ private let defaultSubType: String = "octet-stream"
 /// Represents a media type, consisting of a top-level type and a subtype.
 /// May also possess parameters which adjust or qualify the media type.
 /// MimeType parameters are not parsed or processed but are provided as-is as a String
-public struct MimeType: StringLiteralConvertible, CustomStringConvertible {
+public struct MimeType: ExpressibleByStringLiteral, CustomStringConvertible {
     /// Required for StringLiteralConvertible
     public typealias StringLiteralType = String
     /// Required for StringLiteralConvertible

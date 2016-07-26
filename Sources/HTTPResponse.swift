@@ -293,13 +293,11 @@ public extension HTTPResponse {
 	func appendBody(bytes: [UInt8]) {
 		bodyBytes.append(contentsOf: bytes)
 	}
-	
 	/// Append String data to the outgoing response.
 	/// All such data will be converted to a UTF-8 encoded [UInt8]
 	func appendBody(string: String) {
 		bodyBytes.append(contentsOf: [UInt8](string.utf8))
 	}
-	
 	/// Set the bodyBytes member, clearing out any existing data.
 	func setBody(bytes: [UInt8]) {
 		self.bodyBytes.removeAll()
@@ -370,9 +368,9 @@ extension Double {
 		var time = time_t(self / 1000.0)
 		gmtime_r(&time, &t)
 		let maxResults = 1024
-		let results = UnsafeMutablePointer<Int8>(allocatingCapacity:  maxResults)
+		let results = UnsafeMutablePointer<Int8>.allocate(capacity: maxResults)
 		defer {
-			results.deallocateCapacity(maxResults)
+			results.deallocate(capacity: maxResults)
 		}
 		let res = strftime(results, maxResults, format, &t)
 		if res > 0 {

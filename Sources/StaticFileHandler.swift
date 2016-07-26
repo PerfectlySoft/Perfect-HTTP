@@ -18,24 +18,20 @@
 //
 
 import PerfectLib
-
-#if os(OSX)
-	import Foundation
+import Foundation
 	
-	extension String {
-		var pathExtension: String {
-			let url = URL(fileURLWithPath: self)
-			return url.pathExtension ?? ""
-		}
+extension String {
+	var pathExtension: String {
+		return URL(fileURLWithPath: self).pathExtension ?? ""
 	}
-#endif
+}
 
 import OpenSSL
 
 extension String.UTF8View {
 	var sha1: [UInt8] {
-		let bytes = UnsafeMutablePointer<UInt8>(allocatingCapacity:  Int(SHA_DIGEST_LENGTH))
-		defer { bytes.deallocateCapacity(Int(SHA_DIGEST_LENGTH)) }
+		let bytes = UnsafeMutablePointer<UInt8>.allocate(capacity:  Int(SHA_DIGEST_LENGTH))
+		defer { bytes.deallocate(capacity: Int(SHA_DIGEST_LENGTH)) }
 		
 		SHA1(Array<UInt8>(self), (self.count), bytes)
 		
@@ -221,7 +217,7 @@ public struct StaticFileHandler {
 			return Range(uncheckedBounds: (lower, max))
 		}
 		
-		guard let lower = Int(String(split[0])), upper = Int(String(split[1])) else {
+		guard let lower = Int(String(split[0])), let upper = Int(String(split[1])) else {
 			return nil
 		}
 		

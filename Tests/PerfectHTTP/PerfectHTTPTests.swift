@@ -7,11 +7,12 @@ import PerfectLib
 	import SwiftGlibc
 #endif
 
+// random from 1 to upper, inclusive
 func _rand(to upper: Int32) -> Int32 {
 	#if os(OSX)
-		return Int32(arc4random_uniform(UInt32(upper)))
+		return Int32(arc4random_uniform(UInt32(upper-1))) + 1
 	#else
-		return SwiftGlibc.rand() % Int32(upper)
+		return (SwiftGlibc.rand() % Int32(upper-1)) + 1
 	#endif
 }
 
@@ -285,6 +286,7 @@ class PerfectHTTPTests: XCTestCase {
 		do {
 			let fnd = r.navigator.findHandler(uri: "/foo/bar/baz/bum", webRequest: req)
 			XCTAssert(fnd != nil)
+			XCTAssert(req.urlVariables[routeTrailingWildcardKey] == "/bar/baz/bum")
 		}
 		
 		do {
@@ -311,6 +313,7 @@ class PerfectHTTPTests: XCTestCase {
 		do {
 			let fnd = r.navigator.findHandler(uri: "/foo/bar/baz/bum", webRequest: req)
 			XCTAssert(fnd != nil)
+			XCTAssert(req.urlVariables[routeTrailingWildcardKey] == "/foo/bar/baz/bum")
 		}
 		
 		do {
