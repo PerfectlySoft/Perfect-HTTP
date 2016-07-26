@@ -368,9 +368,9 @@ extension Double {
 		var time = time_t(self / 1000.0)
 		gmtime_r(&time, &t)
 		let maxResults = 1024
-		let results = UnsafeMutablePointer<Int8>(allocatingCapacity:  maxResults)
+		let results = UnsafeMutablePointer<Int8>.allocate(capacity: maxResults)
 		defer {
-			results.deallocateCapacity(maxResults)
+			results.deallocate(capacity: maxResults)
 		}
 		let res = strftime(results, maxResults, format, &t)
 		if res > 0 {

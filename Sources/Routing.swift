@@ -124,7 +124,7 @@ public struct Routes {
 		}
 	}
 	
-	private func formatException(route r: String, error: ErrorProtocol) -> String {
+	private func formatException(route r: String, error: Error) -> String {
 		return "\(error) - \(r)"
 	}
 	
@@ -163,7 +163,7 @@ extension String {
 	}
 }
 
-private enum RouteException: ErrorProtocol {
+private enum RouteException: Error {
 	case invalidRoute
 }
 
@@ -217,7 +217,7 @@ class RouteNode: CustomStringConvertible {
 	
 	func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> RouteMap.RequestHandler? {
 		var m = generator
-		if let p = m.next() where p != "/" {
+		if let p = m.next(), p != "/" {
 			
 			// variables
 			for node in self.variables {
