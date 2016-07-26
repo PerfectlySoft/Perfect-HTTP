@@ -18,17 +18,13 @@
 //
 
 import PerfectLib
-
-#if os(OSX)
-	import Foundation
+import Foundation
 	
-	extension String {
-		var pathExtension: String {
-			let url = URL(fileURLWithPath: self)
-			return url.pathExtension 
-		}
+extension String {
+	var pathExtension: String {
+		return URL(fileURLWithPath: self).pathExtension ?? ""
 	}
-#endif
+}
 
 import OpenSSL
 
