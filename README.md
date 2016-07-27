@@ -8,7 +8,7 @@ This repository is an indirect dependency for the Perfect HTTP 1.1 and FastCGI s
 ## What its for:
 The HTTP library provides a set of Enums, Structs, Objects and methods to handle interactions with http clients. When you are setting up an HTTPServer or FastCGI plugin, you will need to import this library to use the Routing functions.
 
-```
+``` swift
 import PerfectLib
 import PerfectHTTP
 import PerfectHTTPServer
@@ -16,7 +16,7 @@ import PerfectHTTPServer
 
 An example of a routing declaration using a closure block as the handler: 
 
-```
+``` swift
 var routes = Routes()
 
 routes.add(method: .get, uri: "/", handler: {
@@ -29,7 +29,7 @@ routes.add(method: .get, uri: "/", handler: {
 
 The handler can be a separate function which takes an HTTPRequest, an HTTPResponse and either completes the response or hands off to a function which does.
 
-```
+``` swift
 routes.add(method: .get, uri: "/hello", handler: helloWorld)
 
 public func helloWorld(_ request: HTTPRequest, response: HTTPResponse) {
@@ -40,7 +40,7 @@ public func helloWorld(_ request: HTTPRequest, response: HTTPResponse) {
 
 The routes must be added to the server instance before it is started.
 
-```
+``` swift
 let server = HTTPServer()
 
 server.addRoutes(routes)
@@ -48,7 +48,7 @@ configureServer(server)
 ```
 The addRoutes function can be called several times to add more routes if needed. Routes can not be added or modified after a server has started listening for requests.
 
-```
+``` swift
 do {
 	// Launch the HTTP server.
 	try server.start()
