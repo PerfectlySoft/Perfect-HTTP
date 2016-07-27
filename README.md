@@ -5,7 +5,7 @@ Base HTTP Support for Perfect
 
 This repository is an indirect dependency for the Perfect HTTP 1.1 and FastCGI servers. You should not need to add it as a direct dependency in your projects. Please look at [Perfect HTTPServer](https://github.com/PerfectlySoft/Perfect-HTTPServer) for more details.
 
-## What its for:
+## What it's for:
 The HTTP library provides a set of Enums, Structs, Objects and methods to handle interactions with http clients. When you are setting up an HTTPServer or FastCGI plugin, you will need to import this library to use the Routing functions.
 
 ``` swift
