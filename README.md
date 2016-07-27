@@ -64,7 +64,9 @@ Inside your handler function, the HTTPRequest object provides access to all clie
 HTTPRequest will handle parsing and decoding all "application/x-www-form-urlencoded" as well as "multipart/form-data" content type requests. It will make the data for any other content types available in a raw, unparsed form. When handling multipart form data, HTTPRequest will automatically decode the data and create temporary files for any file uploads contained therein. These files will exist until the request ends after which they will be automatically deleted.
 
 As you build the return values, the HTTPResponse object contains all outgoing response data. This consists of the HTTP status code and message, the HTTP headers and any response body data. HTTPResponse also contains the ability to stream or push chunks of response data to the client and to complete or terminate the request.
+
 =======
+
 This repository is an indirect dependency for the Perfect HTTP 1.1 and FastCGI servers. You should not need to add it as a direct dependency in your projects. Please look at [Perfect](https://github.com/PerfectlySoft/Perfect) for more details.
 
 ## Issues
