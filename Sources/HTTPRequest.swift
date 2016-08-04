@@ -119,9 +119,10 @@ public extension HTTPRequest {
             return [(String, String)]()
         }
         return cookie.characters.split(separator: ";").flatMap {
-            let d = $0.split(separator: "=").flatMap { String($0).stringByDecodingURL }
+            let d = $0.split(separator: "=")//.flatMap { String($0).stringByDecodingURL }
             guard d.count == 2 else { return nil }
-            return (d[0], d[1])
+			let d2 = d.map { String($0.filter { $0 != Character(" ") }).stringByDecodingURL ?? "" }
+            return (d2[0], d2[1])
         }
     }
 }
