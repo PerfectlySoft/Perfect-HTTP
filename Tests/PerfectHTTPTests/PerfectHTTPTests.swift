@@ -50,7 +50,7 @@ class ShimHTTPResponse: HTTPResponse {
 	func appendBody(bytes: [UInt8]) {}
 	func appendBody(string: String) {}
 	func setBody(json: [String:Any]) throws {}
-	func push(callback: (Bool) -> ()) {}
+	func push(callback: @escaping (Bool) -> ()) {}
 	func completed() {}
 }
 

@@ -173,7 +173,7 @@ public struct StaticFileHandler {
         resp.addHeader(.eTag, value: eTag)
     }
     
-	func sendFile(remainingBytes remaining: Int, response: HTTPResponse, file: File, completion: (Bool) -> ()) {
+	func sendFile(remainingBytes remaining: Int, response: HTTPResponse, file: File, completion: @escaping (Bool) -> ()) {
 		
 		let thisRead = min(chunkedBufferSize, remaining)
 		do {
