@@ -18,6 +18,7 @@
 //
 
 import PerfectLib
+import PerfectNet
 import Foundation
 	
 extension String {
@@ -61,16 +62,20 @@ public struct StaticFileHandler {
 	
 	let chunkedBufferSize = 1024*200
 	let documentRoot: String
+	let allowResponseFilters: Bool
 	
 	/// Public initializer given a document root.
-	public init(documentRoot: String) {
+	/// If allowResponseFilters is false (which is the default) then the file will be sent in 
+	/// the most effecient way possible and output filters will be bypassed.
+	public init(documentRoot: String, allowResponseFilters: Bool = false) {
 		self.documentRoot = documentRoot
+		self.allowResponseFilters = allowResponseFilters
 	}
 	
     /// Main entry point. A registered URL handler should call this and pass the request and response objects.
     /// After calling this, the StaticFileHandler owns the request and will handle it until completion.
-	public func handleRequest(request req: HTTPRequest, response: HTTPResponse) {
-        var path = req.path
+	public func handleRequest(request: HTTPRequest, response: HTTPResponse) {
+        var path = request.path
 		if path[path.index(before: path.endIndex)] == "/" {
 			path.append("index.html") // !FIX! needs to be configurable
 		}
@@ -88,43 +93,49 @@ public struct StaticFileHandler {
 		}
         do {
             try file.open(.read)
-            self.sendFile(request: req, response: response, file: file)
+            self.sendFile(request: request, response: response, file: file)
         } catch {
             return fnf(msg: "The file \(path) could not be opened \(error).")
         }
 	}
 	
-	func sendFile(request req: HTTPRequest, response resp: HTTPResponse, file: File) {
+	func sendFile(request: HTTPRequest, response: HTTPResponse, file: File) {
 		
-		resp.addHeader(.acceptRanges, value: "bytes")
+		response.addHeader(.acceptRanges, value: "bytes")
 
-		if let rangeRequest = req.header(.range) {
-            return self.performRangeRequest(rangeRequest: rangeRequest, request: req, response: resp, file: file)
-        } else if let ifNoneMatch = req.header(.ifNoneMatch) {
+		if let rangeRequest = request.header(.range) {
+            return self.performRangeRequest(rangeRequest: rangeRequest, request: request, response: response, file: file)
+        } else if let ifNoneMatch = request.header(.ifNoneMatch) {
             let eTag = self.getETag(file: file)
             if ifNoneMatch == eTag {
-                resp.status = .notModified
-                return resp.completed()
+                response.status = .notModified
+                return response.completed()
             }
         }
         
         let size = file.size
         let contentType = MimeType.forExtension(file.path.pathExtension)
         
-		resp.status = .ok
-		resp.addHeader(.contentType, value: contentType)
-		resp.addHeader(.contentLength, value: "\(size)")
+		response.status = .ok
+		response.addHeader(.contentType, value: contentType)
+		response.addHeader(.contentLength, value: "\(size)")
         
-        self.addETag(response: resp, file: file)
+        self.addETag(response: response, file: file)
         
-		if case .head = req.method {
-			return resp.completed()
+		if case .head = request.method {
+			return response.completed()
 		}
-		
-		self.sendFile(remainingBytes: size, response: resp, file: file) {
-			ok in
-			file.close()
-			resp.completed()
+		// send out headers
+		response.push { ok in
+			guard ok else {
+				file.close()
+				return response.completed()
+			}
+			self.sendFile(remainingBytes: size, response: response, file: file) {
+				ok in
+				file.close()
+				response.completed()
+			}
 		}
 	}
 	
@@ -146,13 +157,19 @@ public struct StaticFileHandler {
             }
             
             file.marker = range.lowerBound
-            
-            return self.sendFile(remainingBytes: rangeCount, response: response, file: file) {
-                ok in
-                
-                file.close()
-                response.completed()
-            }
+			// send out headers
+			response.push { ok in
+				guard ok else {
+					file.close()
+					return response.completed()
+				}
+				return self.sendFile(remainingBytes: rangeCount, response: response, file: file) {
+					ok in
+					
+					file.close()
+					response.completed()
+				}
+			}
         } else if ranges.count > 0 {
             // !FIX! support multiple ranges
             response.status = .internalServerError
@@ -160,37 +177,63 @@ public struct StaticFileHandler {
         }
     }
     
-    func getETag(file f: File) -> String {
-        let eTagStr = f.path + "\(f.modificationTime)"
+    func getETag(file: File) -> String {
+        let eTagStr = file.path + "\(file.modificationTime)"
         let eTag = eTagStr.utf8.sha1
         let eTagReStr = eTag.map { $0.hexString }.joined(separator: "")
         
         return eTagReStr
     }
     
-    func addETag(response resp: HTTPResponse, file: File) {
+    func addETag(response: HTTPResponse, file: File) {
         let eTag = self.getETag(file: file)
-        resp.addHeader(.eTag, value: eTag)
+        response.addHeader(.eTag, value: eTag)
     }
     
 	func sendFile(remainingBytes remaining: Int, response: HTTPResponse, file: File, completion: @escaping (Bool) -> ()) {
-		
-		let thisRead = min(chunkedBufferSize, remaining)
-		do {
-			let bytes = try file.readSomeBytes(count: thisRead)
-			response.appendBody(bytes: bytes)
-			response.push {
-				ok in
-				
-				if !ok || thisRead == remaining {
-					// done
-					completion(ok)
-				} else {
-					self.sendFile(remainingBytes: remaining - bytes.count, response: response, file: file, completion: completion)
+		if self.allowResponseFilters {
+			let thisRead = min(chunkedBufferSize, remaining)
+			do {
+				let bytes = try file.readSomeBytes(count: thisRead)
+				response.appendBody(bytes: bytes)
+				response.push {
+					ok in
+					
+					if !ok || thisRead == remaining {
+						// done
+						completion(ok)
+					} else {
+						self.sendFile(remainingBytes: remaining - bytes.count, response: response, file: file, completion: completion)
+					}
 				}
+			} catch {
+				completion(false)
 			}
-		} catch {
-			completion(false)
+		} else {
+			let outFd = response.request.connection.fd.fd
+			let inFd = file.fd
+			let offset = off_t(file.marker)
+			var toSend = off_t(remaining)
+			let result = sendfile(Int32(inFd), outFd, offset, &toSend, nil, 0)
+			
+			if result == 0 {
+				completion(true)
+			} else if result == -1 && errno == EAGAIN {
+				
+				file.marker = Int(offset) + Int(toSend)
+				let newRemaining = remaining - Int(toSend)
+				
+				NetEvent.add(socket: outFd, what: .write, timeoutSeconds: 5.0) {
+					socket, what in
+					if case .write = what {
+						self.sendFile(remainingBytes: newRemaining, response: response, file: file, completion: completion)
+					} else {
+						completion(false)
+					}
+				}
+			} else {
+				completion(false)
+			}
 		}
 	}
 	
