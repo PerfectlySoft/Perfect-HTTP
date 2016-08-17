@@ -60,7 +60,7 @@ public struct StaticFileHandler {
 
 	let chunkedBufferSize = 1024*200
 	let documentRoot: String
-	let allowResponseFilters: Bool
+	var allowResponseFilters: Bool
 
 	/// Public initializer given a document root.
 	/// If allowResponseFilters is false (which is the default) then the file will be sent in
@@ -72,7 +72,7 @@ public struct StaticFileHandler {
 
     /// Main entry point. A registered URL handler should call this and pass the request and response objects.
     /// After calling this, the StaticFileHandler owns the request and will handle it until completion.
-	public func handleRequest(request: HTTPRequest, response: HTTPResponse) {
+	public mutating func handleRequest(request: HTTPRequest, response: HTTPResponse) {
         var path = request.path
 		if path[path.index(before: path.endIndex)] == "/" {
 			path.append("index.html") // !FIX! needs to be configurable
@@ -89,6 +89,12 @@ public struct StaticFileHandler {
 		guard file.exists else {
             return fnf(msg: "The file \(path) was not found.")
 		}
+		
+		// can not use sendfile for SSL requests
+		if let sslCon = request.connection as? NetTCPSSL {
+			self.allowResponseFilters = sslCon.usingSSL
+		}
+		
         do {
             try file.open(.read)
             self.sendFile(request: request, response: response, file: file)
