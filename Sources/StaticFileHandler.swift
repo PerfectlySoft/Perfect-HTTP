@@ -25,12 +25,6 @@ import Foundation
 import LinuxBridge
 #endif
 
-extension String {
-	var pathExtension: String {
-		return URL(fileURLWithPath: self).pathExtension ?? ""
-	}
-}
-
 import OpenSSL
 
 extension String.UTF8View {
@@ -118,7 +112,7 @@ public struct StaticFileHandler {
         }
 
         let size = file.size
-        let contentType = MimeType.forExtension(file.path.pathExtension)
+        let contentType = MimeType.forExtension(file.path.filePathExtension)
 
 		response.status = .ok
 		response.addHeader(.contentType, value: contentType)
@@ -149,7 +143,7 @@ public struct StaticFileHandler {
         if ranges.count == 1 {
             let range = ranges[0]
             let rangeCount = range.count
-            let contentType = MimeType.forExtension(file.path.pathExtension)
+            let contentType = MimeType.forExtension(file.path.filePathExtension)
 
             response.status = .partialContent
             response.addHeader(.contentLength, value: "\(rangeCount)")

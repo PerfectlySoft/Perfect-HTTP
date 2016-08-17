@@ -17,7 +17,6 @@
 //===----------------------------------------------------------------------===//
 //
 
-import PerfectLib
 #if os(Linux)
 	import SwiftGlibc
 #else
