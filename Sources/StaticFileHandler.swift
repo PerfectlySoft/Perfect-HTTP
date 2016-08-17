@@ -60,7 +60,7 @@ public struct StaticFileHandler {
 
 	let chunkedBufferSize = 1024*200
 	let documentRoot: String
-	var allowResponseFilters: Bool
+	let allowResponseFilters: Bool
 
 	/// Public initializer given a document root.
 	/// If allowResponseFilters is false (which is the default) then the file will be sent in
@@ -72,7 +72,7 @@ public struct StaticFileHandler {
 
     /// Main entry point. A registered URL handler should call this and pass the request and response objects.
     /// After calling this, the StaticFileHandler owns the request and will handle it until completion.
-	public mutating func handleRequest(request: HTTPRequest, response: HTTPResponse) {
+	public func handleRequest(request: HTTPRequest, response: HTTPResponse) {
         var path = request.path
 		if path[path.index(before: path.endIndex)] == "/" {
 			path.append("index.html") // !FIX! needs to be configurable
@@ -90,11 +90,6 @@ public struct StaticFileHandler {
             return fnf(msg: "The file \(path) was not found.")
 		}
 		
-		// can not use sendfile for SSL requests
-		if let sslCon = request.connection as? NetTCPSSL {
-			self.allowResponseFilters = sslCon.usingSSL
-		}
-		
         do {
             try file.open(.read)
             self.sendFile(request: request, response: response, file: file)
@@ -103,6 +98,17 @@ public struct StaticFileHandler {
         }
 	}
 
+	func shouldSkipSendfile(response: HTTPResponse) -> Bool {
+		if self.allowResponseFilters {
+			return true
+		}
+		// can not use sendfile for SSL requests
+		if let sslCon = response.request.connection as? NetTCPSSL {
+			return sslCon.usingSSL
+		}
+		return false
+	}
+	
 	func sendFile(request: HTTPRequest, response: HTTPResponse, file: File) {
 
 		response.addHeader(.acceptRanges, value: "bytes")
@@ -195,7 +201,7 @@ public struct StaticFileHandler {
     }
 
 	func sendFile(remainingBytes remaining: Int, response: HTTPResponse, file: File, completion: @escaping (Bool) -> ()) {
-		if self.allowResponseFilters {
+		if self.shouldSkipSendfile(response: response) {
 			let thisRead = min(chunkedBufferSize, remaining)
 			do {
 				let bytes = try file.readSomeBytes(count: thisRead)
