@@ -68,12 +68,12 @@ public struct Routes {
 	}
 	
 	/// Add the given method, uri and handler as a route.
-	public mutating func add(method: HTTPMethod, uri: String, handler: RequestHandler) {
+	public mutating func add(method: HTTPMethod, uri: String, handler: @escaping RequestHandler) {
 		self.add(Route(method: method, uri: uri, handler: handler))
 	}
 	
 	/// Add the given method, uris and handler as a route.
-	public mutating func add(method: HTTPMethod, uris: [String], handler: RequestHandler) {
+	public mutating func add(method: HTTPMethod, uris: [String], handler: @escaping RequestHandler) {
 		for uri in uris {
 			self.add(method: method, uri: uri, handler: handler)
 		}
@@ -81,14 +81,14 @@ public struct Routes {
 	
 	/// Add the given uri and handler as a route. 
 	/// This will add the route for both GET and POST methods.
-	public mutating func add(uri: String, handler: RequestHandler) {
+	public mutating func add(uri: String, handler: @escaping RequestHandler) {
 		self.add(method: .get, uri: uri, handler: handler)
 		self.add(method: .post, uri: uri, handler: handler)
 	}
 	
 	/// Add the given method, uris and handler as a route.
 	/// This will add the route for both GET and POST methods.
-	public mutating func add(uris: [String], handler: RequestHandler) {
+	public mutating func add(uris: [String], handler: @escaping RequestHandler) {
 		for uri in uris {
 			self.add(uri: uri, handler: handler)
 		}
@@ -269,11 +269,11 @@ class RouteNode: CustomStringConvertible {
 		return nil
 	}
 	
-	func successfulRoute(currentComponent _: String, handler: RouteMap.RequestHandler, webRequest: HTTPRequest) -> RouteMap.RequestHandler {
+	func successfulRoute(currentComponent _: String, handler: @escaping RouteMap.RequestHandler, webRequest: HTTPRequest) -> RouteMap.RequestHandler {
 		return handler
 	}
 	
-	func addPathSegments(generator gen: ComponentGenerator, handler: RouteMap.RequestHandler) throws {
+	func addPathSegments(generator gen: ComponentGenerator, handler: @escaping RouteMap.RequestHandler) throws {
 		var m = gen
 		if let p = m.next() {
 			if p == "/" {
@@ -286,7 +286,7 @@ class RouteNode: CustomStringConvertible {
 		}
 	}
 	
-	private func addPathSegment(component comp: String, g: ComponentGenerator, h: RouteMap.RequestHandler) throws {
+	private func addPathSegment(component comp: String, g: ComponentGenerator, h: @escaping RouteMap.RequestHandler) throws {
 		if let node = self.nodeForComponent(component: comp) {
 			try node.addPathSegments(generator: g, handler: h)
 		} else {
@@ -375,7 +375,7 @@ class RouteTrailingWildCard: RouteWildCard {
 		return s
 	}
 	
-	override func addPathSegments(generator gen: ComponentGenerator, handler: RouteMap.RequestHandler) throws {
+	override func addPathSegments(generator gen: ComponentGenerator, handler: @escaping RouteMap.RequestHandler) throws {
 		var m = gen
 		if let _ = m.next() {
 			throw RouteException.invalidRoute
@@ -409,7 +409,7 @@ class RouteVariable: RouteNode {
 		return s
 	}
 	
-	override func successfulRoute(currentComponent currComp: String, handler: RouteMap.RequestHandler, webRequest: HTTPRequest) -> RouteMap.RequestHandler {
+	override func successfulRoute(currentComponent currComp: String, handler: @escaping RouteMap.RequestHandler, webRequest: HTTPRequest) -> RouteMap.RequestHandler {
 		if let decodedComponent = currComp.stringByDecodingURL {
 			webRequest.urlVariables[self.name] = decodedComponent
 		} else {
