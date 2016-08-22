@@ -25,7 +25,7 @@ import Foundation
 import LinuxBridge
 #endif
 
-import OpenSSL
+import COpenSSL
 
 extension String.UTF8View {
 	var sha1: [UInt8] {
