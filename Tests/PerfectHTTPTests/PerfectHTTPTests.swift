@@ -27,6 +27,7 @@ class ShimHTTPRequest: HTTPRequest {
 	var documentRoot = "./webroot"
 	var connection = NetTCP()
 	var urlVariables = [String:String]()
+	var scratchPad = [String:Any]()
 	func header(_ named: HTTPRequestHeader.Name) -> String? { return nil }
 	func addHeader(_ named: HTTPRequestHeader.Name, value: String) {}
 	func setHeader(_ named: HTTPRequestHeader.Name, value: String) {}

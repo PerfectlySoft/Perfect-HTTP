@@ -267,7 +267,7 @@ public protocol HTTPResponse: class {
     var isStreaming: Bool { get set }
 	/// Body data waiting to be sent to the client.
 	/// This will be emptied after each chunk is sent.
-    var bodyBytes: [UInt8] { get set }
+	var bodyBytes: [UInt8] { get set }
     /// Returns the requested outgoing header value.
     func header(_ named: HTTPResponseHeader.Name) -> String?
 	/// Add a header to the outgoing response.

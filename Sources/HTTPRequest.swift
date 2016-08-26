@@ -42,7 +42,12 @@ public protocol HTTPRequest: class {
 	/// The TCP connection for this request.
     var connection: NetTCP { get }
 	/// Any URL variables acquired during routing the path to the request handler.
-    var urlVariables: [String:String] { get set }
+	var urlVariables: [String:String] { get set }
+	/// This dictionary is available for general use.
+	/// It permits components which might be loosely coupled and called at differing times
+	/// in the request execution process (eg. request/response filters) to pass messages or store
+	/// data for later use.
+	var scratchPad: [String:Any] { get set }
     /// Returns the requested incoming header value.
 	func header(_ named: HTTPRequestHeader.Name) -> String?
 	/// Add a header to the response.
