@@ -420,6 +420,29 @@ public final class MimeReader {
 		}
 	}
 	
+	/// Add data to be parsed.
+	/// - parameter bytes: The array of UInt8 to be parsed.
+	public func addToBuffer(bytes byts: UnsafePointer<UInt8>, length: Int) {
+		if isMultiPart {
+			if self.buffer.count != 0 {
+				for i in 0..<length {
+					self.buffer.append(byts[i])
+				}
+				internalAddToBuffer(bytes: self.buffer)
+			} else {
+				var a = [UInt8]()
+				for i in 0..<length {
+					a.append(byts[i])
+				}
+				internalAddToBuffer(bytes: a)
+			}
+		} else {
+			for i in 0..<length {
+				self.buffer.append(byts[i])
+			}
+		}
+	}
+	
 	/// Returns true of the content type indicated a multi-part form.
 	public var isMultiPart: Bool {
 		return self.multi
