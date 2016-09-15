@@ -116,7 +116,7 @@ public extension HTTPRequest {
         if self.queryParams.count == 0 {
             return self.path
         }
-        return "\(self.path)?\(self.queryParams.map { return "\($0.0.stringByEncodingURL)=\($0.1.stringByEncodingURL)" }.joined(separator: "&")))"
+        return "\(self.path)?\(self.queryParams.map { return "\($0.0.stringByEncodingURL)=\($0.1.stringByEncodingURL)" }.joined(separator: "&"))"
     }
     /// Returns all the cookie name/value pairs parsed from the request.
     public var cookies: [(String, String)] {
