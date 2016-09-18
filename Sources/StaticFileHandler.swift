@@ -74,10 +74,20 @@ public struct StaticFileHandler {
     /// After calling this, the StaticFileHandler owns the request and will handle it until completion.
 	public func handleRequest(request: HTTPRequest, response: HTTPResponse) {
         var path = request.path
-		if path[path.index(before: path.endIndex)] == "/" {
+		if path.hasSuffix("/") {
 			path.append("index.html") // !FIX! needs to be configurable
 		}
-		let file = File(documentRoot + "/" + path)
+        
+        if path.hasPrefix("/") {
+            path.utf16.removeFirst()
+        }
+        
+        var docRoot = documentRoot
+        if docRoot.hasSuffix("/") {
+            docRoot.utf16.removeLast()
+        }
+        
+		let file = File(docRoot + "/" + path)
 
         func fnf(msg: String) {
             response.status = .notFound
