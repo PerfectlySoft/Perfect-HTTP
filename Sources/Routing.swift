@@ -34,9 +34,15 @@ public let routeTrailingWildcardKey = "_trailing_wildcard_"
 
 /// Combines a method, uri and handler
 public struct Route {
-	let method: HTTPMethod
-	let uri: String
-	let handler: RequestHandler
+	public let method: HTTPMethod
+	public let uri: String
+	public let handler: RequestHandler
+
+	public init(method: HTTPMethod, uri: String, handler: @escaping RequestHandler) {
+		self.method = method
+		self.uri = uri
+		self.handler = handler
+  }
 }
 
 /// A group of routes. Add one or more routes to this object then call its navigator property to get the RouteNavigator.
