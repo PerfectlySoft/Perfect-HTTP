@@ -326,11 +326,11 @@ public extension HTTPResponse {
 			case .absoluteDate(let date):
 				cookieLine.append(";expires=" + date)
 			case .absoluteSeconds(let seconds):
-				let formattedDate = (seconds*60).secondsToDate()
+				let formattedDate = seconds.secondsToDate()
 					.formatDate(format: "%a, %d-%b-%Y %T GMT")  ?? "INVALID DATE"
 				cookieLine.append(";expires=" + formattedDate)
 			case .relativeSeconds(let seconds):
-				let formattedDate = (Double.now + (seconds*60).secondsToDate())
+				let formattedDate = (Double.now + seconds.secondsToDate())
 					.formatDate(format: "%a, %d-%b-%Y %T GMT") ?? "INVALID DATE"
 				cookieLine.append(";expires=" + formattedDate)
 			}
