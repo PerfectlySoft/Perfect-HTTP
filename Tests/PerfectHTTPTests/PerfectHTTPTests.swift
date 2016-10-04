@@ -269,14 +269,25 @@ class PerfectHTTPTests: XCTestCase {
 	}
 	
 	func testRoutingVars() {
-		let uri = "/foo/{bar}/baz/{bum}"
+		let uri = "/fOo/{bar}/baZ/{bum}"
 		var r = Routes()
 		r.add(method: .get, uri: uri, handler: { _, _ in })
 		let req = ShimHTTPRequest()
-		let fnd = r.navigator.findHandler(uri: "/foo/1/baz/2", webRequest: req)
+		let fnd = r.navigator.findHandler(uri: "/Foo/1/Baz/2", webRequest: req)
 		XCTAssert(fnd != nil)
 		XCTAssert(req.urlVariables["bar"] == "1")
 		XCTAssert(req.urlVariables["bum"] == "2")
+	}
+	
+	func testRoutingVars2() {
+		let uri = "/fOo/{bar}/baZ/{bum}"
+		var r = Routes()
+		r.add(method: .get, uri: uri, handler: { _, _ in })
+		let req = ShimHTTPRequest()
+		let fnd = r.navigator.findHandler(uri: "/Foo/ABC/Baz/abc", webRequest: req)
+		XCTAssert(fnd != nil)
+		XCTAssert(req.urlVariables["bar"] == "ABC")
+		XCTAssert(req.urlVariables["bum"] == "abc")
 	}
 	
 	func testRoutingTrailingWild1() {
@@ -373,6 +384,7 @@ class PerfectHTTPTests: XCTestCase {
 			("testRoutingNotFound", testRoutingNotFound),
 			("testRoutingWild", testRoutingWild),
 			("testRoutingVars", testRoutingVars),
+			("testRoutingVars2", testRoutingVars2),
 			("testRoutingAddPerformance", testRoutingAddPerformance),
 			("testRoutingFindPerformance", testRoutingFindPerformance),
 			("testRoutingTrailingWild1", testRoutingTrailingWild1),

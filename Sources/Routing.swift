@@ -111,7 +111,7 @@ public struct Routes {
 		}
 		
 		func findHandler(uri: String, webRequest: HTTPRequest) -> RequestHandler? {
-			let components = uri.lowercased().routePathComponents
+			let components = uri.routePathComponents
 			let g = components.makeIterator()
 			let method = webRequest.method
 			guard let root = self.map[method] else {
@@ -227,7 +227,7 @@ class RouteNode: CustomStringConvertible {
 			}
 			
 			// paths
-			if let node = self.subNodes[p] {
+			if let node = self.subNodes[p.lowercased()] {
 				if let h = node.findHandler(currentComponent: p, generator: m, webRequest: webRequest) {
 					return self.successfulRoute(currentComponent: curComp, handler: node.successfulRoute(currentComponent: p, handler: h, webRequest: webRequest), webRequest: webRequest)
 				}
