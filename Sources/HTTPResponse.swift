@@ -221,6 +221,13 @@ public struct HTTPCookie {
         /// Custom expiration date string
         case absoluteDate(String)
     }
+    public enum SameSite {
+        // https://tools.ietf.org/html/draft-west-first-party-cookies-07
+        // Cross-site usage is allowed
+        case lax
+        // The cookie is withheld with any cross-site usage
+        case strict
+    }
     
     /// Cookie name
     public let name: String
@@ -236,6 +243,8 @@ public struct HTTPCookie {
     public let secure: Bool?
     /// Cookie http only flag
     public let httpOnly: Bool?
+    /// Cookie http only flag
+    public let sameSite: SameSite?
     
     /// Cookie public initializer
     public init(name: String,
@@ -244,7 +253,8 @@ public struct HTTPCookie {
                 expires: Expiration?,
                 path: String?,
                 secure: Bool?,
-                httpOnly: Bool?) {
+                httpOnly: Bool?,
+                sameSite: SameSite?) {
         self.name = name
         self.value = value
         self.domain = domain
@@ -252,6 +262,7 @@ public struct HTTPCookie {
         self.path = path
         self.secure = secure
         self.httpOnly = httpOnly
+        self.sameSite = sameSite
     }
 }
 
@@ -350,6 +361,9 @@ public extension HTTPResponse {
 			if httpOnly == true {
 				cookieLine.append("; HttpOnly")
 			}
+		}
+		if let sameSite = cookie.sameSite {
+			cookieLine.append("; sameSite=" + (sameSite == .lax ? "Lax" : "Strict"))
 		}
 		addHeader(.setCookie, value: cookieLine)
 	}
