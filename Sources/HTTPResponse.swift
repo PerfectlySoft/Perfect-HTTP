@@ -243,18 +243,18 @@ public struct HTTPCookie {
     public let secure: Bool?
     /// Cookie http only flag
     public let httpOnly: Bool?
-    /// Cookie http only flag
+    /// Cookie samesite flag
     public let sameSite: SameSite?
     
     /// Cookie public initializer
     public init(name: String,
                 value: String,
-                domain: String?,
-                expires: Expiration?,
-                path: String?,
-                secure: Bool?,
-                httpOnly: Bool?,
-                sameSite: SameSite?) {
+                domain: String? = nil,
+                expires: Expiration? = nil,
+                path: String? = nil,
+                secure: Bool? = nil,
+                httpOnly: Bool? = nil,
+                sameSite: SameSite? = nil) {
         self.name = name
         self.value = value
         self.domain = domain
