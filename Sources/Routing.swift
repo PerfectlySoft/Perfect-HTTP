@@ -56,47 +56,75 @@ public struct Routes {
 		self.baseUri = ""
 	}
 	
-	// Initialize with a baseUri.
+	/// Initialize with a baseUri.
 	public init(baseUri: String) {
 		self.baseUri = Routes.sanitizeUri(baseUri)
 	}
 	
-	/// Add all the routes in the Routes object to this one.
+	/// Initialize with a array of Route.
+	public init(_ routes: [Route]) {
+		self.baseUri = ""
+		add(routes)
+	}
+	
+	/// Initialize with a baseUri and array of Route.
+	public init(baseUri: String, routes: [Route]) {
+		self.baseUri = Routes.sanitizeUri(baseUri)
+		add(routes)
+	}
+	
+	// Add all the routes in the Routes object to this one.
+	@available(*, deprecated, message: "Use Routes.add(_:Routes)")
 	public mutating func add(routes: Routes) {
 		for route in routes.routes {
 			self.add(route)
 		}
 	}
 	
+	/// Add all the routes in the Routes object to this one.
+	public mutating func add(_ routes: Routes) {
+		for route in routes.routes {
+			self.add(route)
+		}
+	}
+	
+	/// Add all the routes in the Routes array to this one.
+	public mutating func add(_ routes: [Route]) {
+		for route in routes {
+			self.add(route)
+		}
+	}
+	
 	/// Add one Route to this object.
-	public mutating func add(_ route: Route) {
+	public mutating func add(_ route: Route, routes vroots: Route...) {
 		routes.append(Route(method: route.method, uri: self.baseUri + Routes.sanitizeUri(route.uri), handler: route.handler))
+		add(vroots)
 	}
 	
 	/// Add the given method, uri and handler as a route.
 	public mutating func add(method: HTTPMethod, uri: String, handler: @escaping RequestHandler) {
-		self.add(Route(method: method, uri: uri, handler: handler))
+		add(Route(method: method, uri: uri, handler: handler))
 	}
 	
 	/// Add the given method, uris and handler as a route.
 	public mutating func add(method: HTTPMethod, uris: [String], handler: @escaping RequestHandler) {
 		for uri in uris {
-			self.add(method: method, uri: uri, handler: handler)
+			add(method: method, uri: uri, handler: handler)
 		}
 	}
 	
 	/// Add the given uri and handler as a route. 
 	/// This will add the route for both GET and POST methods.
 	public mutating func add(uri: String, handler: @escaping RequestHandler) {
-		self.add(method: .get, uri: uri, handler: handler)
-		self.add(method: .post, uri: uri, handler: handler)
+		add(method: .get, uri: uri, handler: handler)
+		add(method: .post, uri: uri, handler: handler)
 	}
 	
 	/// Add the given method, uris and handler as a route.
 	/// This will add the route for both GET and POST methods.
 	public mutating func add(uris: [String], handler: @escaping RequestHandler) {
 		for uri in uris {
-			self.add(uri: uri, handler: handler)
+			add(uri: uri, handler: handler)
 		}
 	}
 	
