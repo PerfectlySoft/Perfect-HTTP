@@ -243,7 +243,7 @@ class PerfectHTTPTests: XCTestCase {
 			let fnd = r.navigator.findHandler(uri: uri, webRequest: req)
 			XCTAssert(fnd != nil)
 		}
-		req.method = .post
+		req.method = .options
 		do {
 			let fnd = r.navigator.findHandler(uri: uri, webRequest: req)
 			XCTAssert(fnd != nil)

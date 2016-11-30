@@ -34,15 +34,27 @@ public let routeTrailingWildcardKey = "_trailing_wildcard_"
 
 /// Combines a method, uri and handler
 public struct Route {
-	public let method: HTTPMethod
+	public let methods: [HTTPMethod]
 	public let uri: String
 	public let handler: RequestHandler
-
+	/// A single method, a uri and handler.
 	public init(method: HTTPMethod, uri: String, handler: @escaping RequestHandler) {
-		self.method = method
+		self.methods = [method]
 		self.uri = uri
 		self.handler = handler
-  }
+	}
+	/// An array of methods, a uri and handler.
+	public init(methods: [HTTPMethod], uri: String, handler: @escaping RequestHandler) {
+		self.methods = methods
+		self.uri = uri
+		self.handler = handler
+	}
+	/// A uri and a handler on any method.
+	public init(uri: String, handler: @escaping RequestHandler) {
+		self.methods = HTTPMethod.allMethods
+		self.uri = uri
+		self.handler = handler
+	}
 }
 
 /// A group of routes. Add one or more routes to this object then call its navigator property to get the RouteNavigator.
@@ -97,7 +109,7 @@ public struct Routes {
 	
 	/// Add one Route to this object.
 	public mutating func add(_ route: Route, routes vroots: Route...) {
-		routes.append(Route(method: route.method, uri: self.baseUri + Routes.sanitizeUri(route.uri), handler: route.handler))
+		routes.append(Route(methods: route.methods, uri: self.baseUri + Routes.sanitizeUri(route.uri), handler: route.handler))
 		add(vroots)
 	}
 	
@@ -114,14 +126,13 @@ public struct Routes {
 	}
 	
 	/// Add the given uri and handler as a route. 
-	/// This will add the route for both GET and POST methods.
+	/// This will add the route for all standard methods.
 	public mutating func add(uri: String, handler: @escaping RequestHandler) {
-		add(method: .get, uri: uri, handler: handler)
-		add(method: .post, uri: uri, handler: handler)
+		add(Route(uri: uri, handler: handler))
 	}
 	
 	/// Add the given method, uris and handler as a route.
-	/// This will add the route for both GET and POST methods.
+	/// This will add the route for all standard methods.
 	public mutating func add(uris: [String], handler: @escaping RequestHandler) {
 		for uri in uris {
 			add(uri: uri, handler: handler)
@@ -166,24 +177,22 @@ public struct Routes {
 	public var navigator: RouteNavigator {
 		var map = [HTTPMethod:RouteNode]()
 		for route in routes {
-			let method = route.method
 			let uri = route.uri
 			let handler = route.handler
-			
-			var fnd = map[method]
-			if nil == fnd {
-				fnd = RouteNode()
-				map[method] = fnd
-			}
-			
-			guard let node = fnd else {
-				continue
-			}
-			
-			do {
-				try node.addPathSegments(generator: uri.lowercased().routePathComponents.makeIterator(), handler: handler)
-			} catch let e {
-				Log.error(message: self.formatException(route: uri, error: e))
+			for method in route.methods {
+				var fnd = map[method]
+				if nil == fnd {
+					fnd = RouteNode()
+					map[method] = fnd
+				}
+				guard let node = fnd else {
+					continue
+				}
+				do {
+					try node.addPathSegments(generator: uri.lowercased().routePathComponents.makeIterator(), handler: handler)
+				} catch let e {
+					Log.error(message: self.formatException(route: uri, error: e))
+				}
 			}
 		}
 		return Navigator(map: map)

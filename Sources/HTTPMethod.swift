@@ -37,7 +37,11 @@ public enum HTTPMethod: Hashable, CustomStringConvertible {
     connect,
     /// Any unaccounted for or custom method
     custom(String)
-    
+	/// All non-custom methods
+	public static var allMethods: [HTTPMethod] {
+		return [.options, .get, .head, .post, .put, .delete, .trace]
+	}
+	
     public static func from(string: String) -> HTTPMethod {
         
         switch string {
