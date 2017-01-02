@@ -374,6 +374,44 @@ class PerfectHTTPTests: XCTestCase {
 			XCTAssert(false, "Bad date format")
 		}
 	}
+	
+	func testMimeTypeComparison() {
+		do {
+			let lhs = MimeType("text/plain")
+			let rhs = MimeType("text/plain")
+			XCTAssert(lhs == rhs)
+		}
+		do {
+			let lhs = MimeType("text/*")
+			let rhs = MimeType("text/plain")
+			XCTAssert(lhs == rhs)
+		}
+		do {
+			let lhs = MimeType("text/plain")
+			let rhs = MimeType("text/*")
+			XCTAssert(lhs == rhs)
+		}
+		do {
+			let lhs = MimeType("text/plain")
+			let rhs = MimeType("*/*")
+			XCTAssert(lhs == rhs)
+		}
+		do {
+			let lhs = MimeType("text/plain")
+			let rhs = MimeType("text/html")
+			XCTAssert(lhs != rhs)
+		}
+		do {
+			let lhs = MimeType("*/plain")
+			let rhs = MimeType("text/plain")
+			XCTAssert(lhs == rhs)
+		}
+		do {
+			let lhs = MimeType("*/plain")
+			let rhs = MimeType("text/html")
+			XCTAssert(lhs != rhs)
+		}
+	}
 
     static var allTests : [(String, (PerfectHTTPTests) -> () throws -> Void)] {
         return [
@@ -389,7 +427,8 @@ class PerfectHTTPTests: XCTestCase {
 			("testRoutingFindPerformance", testRoutingFindPerformance),
 			("testRoutingTrailingWild1", testRoutingTrailingWild1),
 			("testRoutingTrailingWild2", testRoutingTrailingWild2),
-			("testFormatDate", testFormatDate)
+			("testFormatDate", testFormatDate),
+			("testMimeTypeComparison", testMimeTypeComparison)
         ]
     }
 }

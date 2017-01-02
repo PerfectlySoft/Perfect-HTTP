@@ -24,7 +24,7 @@ private let defaultSubType: String = "octet-stream"
 /// Represents a media type, consisting of a top-level type and a subtype.
 /// May also possess parameters which adjust or qualify the media type.
 /// MimeType parameters are not parsed or processed but are provided as-is as a String
-public struct MimeType: ExpressibleByStringLiteral, CustomStringConvertible {
+public struct MimeType: ExpressibleByStringLiteral, CustomStringConvertible, Comparable {
     /// Required for StringLiteralConvertible
     public typealias StringLiteralType = String
     /// Required for StringLiteralConvertible
@@ -185,6 +185,24 @@ public struct MimeType: ExpressibleByStringLiteral, CustomStringConvertible {
     /// @deprecated
 	public static func forExtension(_ ext: String) -> String {
 		return mimeMap[ext.lowercased()] ?? "\(defaultTopType)/\(defaultSubType)"
+	}
+	
+	public static func ==(lhs: MimeType, rhs: MimeType) -> Bool {
+		let lhsType = lhs.type.description
+		let rhsType = rhs.type.description
+		guard lhsType == rhsType || (lhsType == "*" || rhsType == "*") else {
+			return false
+		}
+		let lhsSubType = lhs.subType
+		let rhsSubType = rhs.subType
+		guard lhsSubType == rhsSubType || (lhsSubType == "*" || rhsSubType == "*") else {
+			return false
+		}
+		return true
+	}
+	
+	public static func <(lhs: MimeType, rhs: MimeType) -> Bool {
+		return lhs.description < rhs.description
 	}
 }
 
