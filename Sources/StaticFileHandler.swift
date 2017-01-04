@@ -128,13 +128,19 @@ public struct StaticFileHandler {
 
 		response.status = .ok
 		response.addHeader(.contentType, value: contentType)
-		response.addHeader(.contentLength, value: "\(size)")
-
+		
+		if allowResponseFilters {
+			response.isStreaming = true
+		} else {
+			response.addHeader(.contentLength, value: "\(size)")
+		}
+		
         self.addETag(response: response, file: file)
 
 		if case .head = request.method {
 			return response.completed()
 		}
+		
 		// send out headers
 		response.push { ok in
 			guard ok else {
