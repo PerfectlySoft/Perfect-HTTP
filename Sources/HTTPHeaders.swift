@@ -157,6 +157,9 @@ public enum HTTPResponseHeader {
     
     public enum Name {
         case accessControlAllowOrigin
+		case accessControlAllowMethods
+		case accessControlAllowCredentials
+		case accessControlMaxAge
         case acceptPatch
         case acceptRanges
         case age
@@ -217,6 +220,9 @@ public enum HTTPResponseHeader {
         public var standardName: String {
             switch self {
             case .accessControlAllowOrigin: return "Access-Control-Allow-Origin"
+			case .accessControlAllowMethods: return "Access-Control-Allow-Methods"
+			case .accessControlAllowCredentials: return "Access-Control-Allow-Credentials"
+			case .accessControlMaxAge: return "Access-Control-Max-Age"
             case .acceptPatch: return "Accept-Patch"
             case .acceptRanges: return "Accept-Ranges"
             case .age: return "Age"
@@ -275,6 +281,9 @@ public enum HTTPResponseHeader {
         public static func fromStandard(name: String) -> HTTPResponseHeader.Name {
             switch name {
             case "Access-Control-Allow-Origin": return .accessControlAllowOrigin
+			case "Access-Control-Allow-Methods": return .accessControlAllowMethods
+			case "Access-Control-Allow-Credentials": return .accessControlAllowCredentials
+			case "Access-Control-Max-Age": return .accessControlMaxAge
             case "Accept-Patch": return .acceptPatch
             case "Accept-Ranges": return .acceptRanges
             case "Age": return .age
