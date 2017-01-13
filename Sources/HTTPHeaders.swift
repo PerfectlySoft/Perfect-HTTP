@@ -29,7 +29,7 @@ public enum HTTPRequestHeader {
         case te, userAgent, upgrade, via, warning, xRequestedWith, xRequestedBy, dnt
         case xAuthorization, xForwardedFor, xForwardedHost, xForwardedProto
         case frontEndHttps, xHttpMethodOverride, xATTDeviceId, xWapProfile
-        case proxyConnection, xUIDH, xCsrfToken
+        case proxyConnection, xUIDH, xCsrfToken, accessControlRequestMethod, accessControlRequestHeaders
         case custom(name: String)
         
         public var hashValue: Int {
@@ -43,6 +43,8 @@ public enum HTTPRequestHeader {
             case .acceptEncoding: return "accept-encoding"
             case .acceptLanguage: return "accept-language"
             case .acceptDatetime: return "accept-datetime"
+			case .accessControlRequestMethod: return "access-control-request-method"
+			case .accessControlRequestHeaders: return "access-control-request-headers"
             case .authorization: return "authorization"
             case .cacheControl: return "cache-control"
             case .connection: return "connection"
@@ -95,6 +97,8 @@ public enum HTTPRequestHeader {
             "accept-encoding":.acceptEncoding,
             "accept-language":.acceptLanguage,
             "accept-datetime":.acceptDatetime,
+            "access-control-request-method":.accessControlRequestMethod,
+            "access-control-request-headers":.accessControlRequestHeaders,
             "authorization":.authorization,
             "cache-control":.cacheControl,
             "connection":.connection,
