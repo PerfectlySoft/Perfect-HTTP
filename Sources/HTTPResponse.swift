@@ -22,6 +22,9 @@
 #else
 	import Darwin
 #endif
+import PerfectLib
+
+private let applicationJson = "application/json"
 
 /// HTTP response status code/msg.
 public enum HTTPResponseStatus: CustomStringConvertible {
@@ -283,10 +286,12 @@ public protocol HTTPResponse: class {
     func header(_ named: HTTPResponseHeader.Name) -> String?
 	/// Add a header to the outgoing response.
 	/// No check for duplicate or repeated headers will be made.
-    func addHeader(_ named: HTTPResponseHeader.Name, value: String)
+	@discardableResult
+    func addHeader(_ named: HTTPResponseHeader.Name, value: String) -> Self
 	/// Set the indicated header value. 
 	/// If the header already exists then the existing value will be replaced.
-    func setHeader(_ named: HTTPResponseHeader.Name, value: String)
+	@discardableResult
+    func setHeader(_ named: HTTPResponseHeader.Name, value: String) -> Self
     /// Provide access to all current header values.
     var headers: AnyIterator<(HTTPResponseHeader.Name, String)> { get }
 	/// Push all currently available headers and body data to the client.
@@ -300,32 +305,44 @@ public protocol HTTPResponse: class {
 
 public extension HTTPResponse {
 	/// Append data to the bodyBytes member.
-	func appendBody(bytes: [UInt8]) {
+    @discardableResult
+	func appendBody(bytes: [UInt8]) -> Self {
 		bodyBytes.append(contentsOf: bytes)
+		return self
 	}
 	/// Append String data to the outgoing response.
 	/// All such data will be converted to a UTF-8 encoded [UInt8]
-	func appendBody(string: String) {
+	@discardableResult
+	func appendBody(string: String) -> Self {
 		bodyBytes.append(contentsOf: [UInt8](string.utf8))
+		return self
 	}
 	/// Set the bodyBytes member, clearing out any existing data.
-	func setBody(bytes: [UInt8]) {
-		self.bodyBytes.removeAll()
-		self.appendBody(bytes: bytes)
+	@discardableResult
+	func setBody(bytes: [UInt8]) -> Self {
+		bodyBytes.removeAll()
+		return appendBody(bytes: bytes)
 	}
 	/// Set the String data of the outgoing response, clearing out any existing data.
 	/// All such data will be converted to a UTF-8 encoded [UInt8]
-	func setBody(string: String) {
-		self.bodyBytes.removeAll()
-		self.appendBody(string: string)
+	@discardableResult
+	func setBody(string: String) -> Self {
+		bodyBytes.removeAll()
+		return appendBody(string: string)
 	}
-	/// Encodes the Dictionary as a JSON string and converts that to a UTF-8 encoded [UInt8]
-	func setBody(json: [String:Any]) throws {
+	/// Encodes the Dictionary as a JSON string and converts that to a UTF-8 encoded [UInt8].
+	/// Adds the "application/json" content type unless `skipContentType` is true.
+	@discardableResult
+	func setBody(json: JSONConvertible, skipContentType: Bool = false) throws -> Self {
 		let string = try json.jsonEncodedString()
-		self.setBody(string: string)
+		if !skipContentType {
+			setHeader(.contentType, value: applicationJson)
+		}
+		return setBody(string: string)
 	}
 	/// Add a cookie to the outgoing response.
-	func addCookie(_ cookie: HTTPCookie) {
+	@discardableResult
+	func addCookie(_ cookie: HTTPCookie) -> Self {
 		var cookieLine = ""
 		cookieLine.append(cookie.name.stringByEncodingURL)
 		cookieLine.append("=")
@@ -365,7 +382,13 @@ public extension HTTPResponse {
 		if let sameSite = cookie.sameSite {
 			cookieLine.append("; sameSite=" + (sameSite == .lax ? "Lax" : "Strict"))
 		}
-		addHeader(.setCookie, value: cookieLine)
+		return addHeader(.setCookie, value: cookieLine)
+	}
+	
+	/// Set the status and call completed()
+	func completed(status: HTTPResponseStatus) {
+		self.status = status
+		self.completed()
 	}
 }
 
