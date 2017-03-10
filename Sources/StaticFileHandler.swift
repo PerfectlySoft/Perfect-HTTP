@@ -190,7 +190,10 @@ public struct StaticFileHandler {
             // !FIX! support multiple ranges
             response.status = .internalServerError
             return response.completed()
-        }
+		} else {
+			response.status = .badRequest
+			return response.completed()
+		}
     }
 
     func getETag(file: File) -> String {
@@ -279,7 +282,6 @@ public struct StaticFileHandler {
 		guard initialSplit.count == 2 && String(initialSplit[0]) == "bytes" else {
 			return [Range<Int>]()
 		}
-
 		let ranges = initialSplit[1]
 		return ranges.split(separator: "/").flatMap { self.parseOneRange(fromString: String($0), max: max) }
 	}
@@ -287,19 +289,26 @@ public struct StaticFileHandler {
 	// 0-3
 	// 0-
 	func parseOneRange(fromString string: String, max: Int) -> Range<Int>? {
-		let split = string.characters.split(separator: "-")
-
-		if split.count == 1 {
-			guard let lower = Int(String(split[0])) else {
+		print("\(string)")
+		let split = string.characters.split(separator: "-", omittingEmptySubsequences: false).map { String($0) }
+		guard split.count == 2 else {
+			return nil
+		}
+		if split[1].isEmpty {
+			guard let lower = Int(split[0]),
+				  lower <= max else {
 				return nil
 			}
 			return Range(uncheckedBounds: (lower, max))
 		}
-
-		guard let lower = Int(String(split[0])), let upper = Int(String(split[1])) else {
+		guard let lower = Int(split[0]),
+			  let upperRaw = Int(split[1]) else {
 			return nil
 		}
-
-		return Range(uncheckedBounds: (lower, upper+1))
+		let upper = Swift.min(max, upperRaw+1)
+		guard lower <= upper else {
+			return nil
+		}
+		return Range(uncheckedBounds: (lower, upper))
 	}
 }
