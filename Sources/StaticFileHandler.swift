@@ -289,7 +289,6 @@ public struct StaticFileHandler {
 	// 0-3
 	// 0-
 	func parseOneRange(fromString string: String, max: Int) -> Range<Int>? {
-		print("\(string)")
 		let split = string.characters.split(separator: "-", omittingEmptySubsequences: false).map { String($0) }
 		guard split.count == 2 else {
 			return nil
