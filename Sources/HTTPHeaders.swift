@@ -33,65 +33,65 @@ public enum HTTPRequestHeader {
         case custom(name: String)
         
         public var hashValue: Int {
-            return self.standardName.hashValue
+            return self.standardName.lowercased().hashValue
         }
         
         public var standardName: String {
             switch self {
-            case .accept: return "accept"
-            case .acceptCharset: return "accept-charset"
-            case .acceptEncoding: return "accept-encoding"
-            case .acceptLanguage: return "accept-language"
-            case .acceptDatetime: return "accept-datetime"
-			case .accessControlRequestMethod: return "access-control-request-method"
-			case .accessControlRequestHeaders: return "access-control-request-headers"
-            case .authorization: return "authorization"
-            case .cacheControl: return "cache-control"
-            case .connection: return "connection"
-            case .cookie: return "cookie"
-            case .contentLength: return "content-length"
-            case .contentMD5: return "content-md5"
-            case .contentType: return "content-type"
-            case .date: return "date"
-            case .expect: return "expect"
-            case .forwarded: return "forwarded"
-            case .from: return "from"
-            case .host: return "host"
-            case .ifMatch: return "if-match"
-            case .ifModifiedSince: return "if-modified-since"
-            case .ifNoneMatch: return "if-none-match"
-            case .ifRange: return "if-range"
-            case .ifUnmodifiedSince: return "if-unmodified-since"
-            case .maxForwards: return "max-forwards"
-            case .origin: return "origin"
-            case .pragma: return "pragma"
-            case .proxyAuthorization: return "proxy-authorization"
-            case .range: return "range"
-            case .referer: return "referer"
-            case .te: return "te"
-            case .userAgent: return "user-agent"
-            case .upgrade: return "upgrade"
-            case .via: return "via"
-            case .warning: return "warning"
-            case .xAuthorization: return "x-authorization"
-			case .xRequestedWith: return "x-requested-with"
-			case .xRequestedBy: return "x-requested-by"
-            case .dnt: return "dnt"
-            case .xForwardedFor: return "x-forwarded-for"
-            case .xForwardedHost: return "x-forwarded-host"
-            case .xForwardedProto: return "x-forwarded-proto"
-            case .frontEndHttps: return "front-end-https"
-            case .xHttpMethodOverride: return "x-http-method-override"
-            case .xATTDeviceId: return "x-att-deviceid"
-            case .xWapProfile: return "x-wap-profile"
-            case .proxyConnection: return "proxy-connection"
-            case .xUIDH: return "x-uidh"
-            case .xCsrfToken: return "x-csrf-token"
-            case .custom(let str): return str.lowercased()
+            case .accept: return "Accept"
+            case .acceptCharset: return "Accept-Charset"
+            case .acceptEncoding: return "Accept-Encoding"
+            case .acceptLanguage: return "Accept-Language"
+            case .acceptDatetime: return "Accept-Datetime"
+			case .accessControlRequestMethod: return "Access-Control-Request-Method"
+			case .accessControlRequestHeaders: return "Access-Control-Request-Headers"
+            case .authorization: return "Authorization"
+            case .cacheControl: return "Cache-Control"
+            case .connection: return "Connection"
+            case .cookie: return "Cookie"
+            case .contentLength: return "Content-Length"
+            case .contentMD5: return "Content-MD5"
+            case .contentType: return "Content-Type"
+            case .date: return "Date"
+            case .expect: return "Expect"
+            case .forwarded: return "Forwarded"
+            case .from: return "From"
+            case .host: return "Host"
+            case .ifMatch: return "If-Match"
+            case .ifModifiedSince: return "If-Modified-Since"
+            case .ifNoneMatch: return "If-None-Match"
+            case .ifRange: return "If-Range"
+            case .ifUnmodifiedSince: return "If-Unmodified-Since"
+            case .maxForwards: return "Max-Forwards"
+            case .origin: return "Origin"
+            case .pragma: return "Pragma"
+            case .proxyAuthorization: return "Proxy-Authorization"
+            case .range: return "Range"
+            case .referer: return "Referer"
+            case .te: return "TE"
+            case .userAgent: return "User-Agent"
+            case .upgrade: return "Upgrade"
+            case .via: return "Via"
+            case .warning: return "Warning"
+            case .xAuthorization: return "X-Authorization"
+			case .xRequestedWith: return "X-Requested-with"
+			case .xRequestedBy: return "X-Requested-by"
+            case .dnt: return "DNT"
+            case .xForwardedFor: return "X-Forwarded-For"
+            case .xForwardedHost: return "X-Forwarded-Host"
+            case .xForwardedProto: return "X-Forwarded-Proto"
+            case .frontEndHttps: return "Front-End-Https"
+            case .xHttpMethodOverride: return "X-HTTP-Method-Override"
+            case .xATTDeviceId: return "X-Att-Deviceid"
+            case .xWapProfile: return "X-WAP-Profile"
+            case .proxyConnection: return "Proxy-Connection"
+            case .xUIDH: return "X-UIDH"
+            case .xCsrfToken: return "X-CSRF-Token"
+            case .custom(let str): return str
             }
         }
         
-        public static let lookupTable: [String:HTTPRequestHeader.Name] = [
+        static let lookupTable: [String:HTTPRequestHeader.Name] = [
             "accept":.accept,
             "accept-charset":.acceptCharset,
             "accept-encoding":.acceptEncoding,
@@ -144,7 +144,7 @@ public enum HTTPRequestHeader {
         ]
         
         public static func fromStandard(name: String) -> HTTPRequestHeader.Name {
-            if let found = HTTPRequestHeader.Name.lookupTable[name] {
+            if let found = HTTPRequestHeader.Name.lookupTable[name.lowercased()] {
                 return found
             }
             return .custom(name: name)
@@ -153,7 +153,7 @@ public enum HTTPRequestHeader {
 }
 
 public func ==(lhs: HTTPRequestHeader.Name, rhs: HTTPRequestHeader.Name) -> Bool {
-    return lhs.standardName == rhs.standardName
+    return lhs.standardName.lowercased() == rhs.standardName.lowercased()
 }
 
 /// A HTTP response header.
@@ -218,7 +218,7 @@ public enum HTTPResponseHeader {
         case custom(name: String)
         
         public var hashValue: Int {
-            return self.standardName.hashValue
+            return self.standardName.lowercased().hashValue
         }
         
         public var standardName: String {
@@ -283,62 +283,62 @@ public enum HTTPResponseHeader {
         }
         
         public static func fromStandard(name: String) -> HTTPResponseHeader.Name {
-            switch name {
-            case "Access-Control-Allow-Origin": return .accessControlAllowOrigin
-			case "Access-Control-Allow-Methods": return .accessControlAllowMethods
-			case "Access-Control-Allow-Credentials": return .accessControlAllowCredentials
-			case "Access-Control-Max-Age": return .accessControlMaxAge
-            case "Accept-Patch": return .acceptPatch
-            case "Accept-Ranges": return .acceptRanges
-            case "Age": return .age
-            case "Allow": return .allow
-            case "Alt-Svc": return .altSvc
-            case "Cache-Control": return .cacheControl
-            case "Connection": return .connection
-            case "Content-Disposition": return .contentDisposition
-            case "Content-Encoding": return .contentEncoding
-            case "Content-Language": return .contentLanguage
-            case "Content-Length": return .contentLength
-            case "Content-Location": return .contentLocation
-            case "Content-MD5": return .contentMD5
-            case "Content-Range": return .contentRange
-            case "Content-Type": return .contentType
-            case "Date": return .date
-            case "ETag": return .eTag
-            case "Expires": return .expires
-            case "Last-Modified": return .lastModified
-            case "Link": return .link
-            case "Location": return .location
-            case "P3P": return .p3p
-            case "Pragma": return .pragma
-            case "Proxy-Authenticate": return .proxyAuthenticate
-            case "Public-Key-Pins": return .publicKeyPins
-            case "Refresh": return .refresh
-            case "Retry-After": return .retryAfter
-            case "Server": return .server
-            case "Set-Cookie": return .setCookie
-            case "Status": return .status
-            case "Strict-Transport-Security": return .strictTransportSecurity
-            case "Trailer": return .trailer
-            case "Transfer-Encoding": return .transferEncoding
-            case "TSV": return .tsv
-            case "Upgrade": return .upgrade
-            case "Vary": return .vary
-            case "Via": return .via
-            case "Warning": return .warning
-            case "WWW-Authenticate": return .wwwAuthenticate
-            case "X-Frame-Options": return .xFrameOptions
-            case "X-XSS-Protection": return .xxsSProtection
-            case "Content-Security-Policy": return .contentSecurityPolicy
-            case "X-Content-Security-Policy": return .xContentSecurityPolicy
-            case "X-WebKit-CSP": return .xWebKitCSP
-            case "X-Content-Type-Options": return .xContentTypeOptions
-            case "X-Powered-By": return .xPoweredBy
-            case "X-UA-Compatible": return .xUACompatible
-            case "X-Content-Duration": return .xContentDuration
-            case "Upgrade-Insecure-Requests": return .upgradeInsecureRequests
-            case "X-Request-ID": return .xRequestID
-            case "X-Correlation-ID": return .xCorrelationID
+            switch name.lowercased() {
+            case "access-control-Allow-Origin": return .accessControlAllowOrigin
+			case "access-control-Allow-Methods": return .accessControlAllowMethods
+			case "access-control-Allow-Credentials": return .accessControlAllowCredentials
+			case "access-control-Max-Age": return .accessControlMaxAge
+            case "accept-patch": return .acceptPatch
+            case "accept-ranges": return .acceptRanges
+            case "age": return .age
+            case "allow": return .allow
+            case "alt-svc": return .altSvc
+            case "cache-control": return .cacheControl
+            case "connection": return .connection
+            case "content-disposition": return .contentDisposition
+            case "content-encoding": return .contentEncoding
+            case "content-language": return .contentLanguage
+            case "content-length": return .contentLength
+            case "content-location": return .contentLocation
+            case "content-mD5": return .contentMD5
+            case "content-range": return .contentRange
+            case "content-type": return .contentType
+            case "date": return .date
+            case "etag": return .eTag
+            case "expires": return .expires
+            case "last-modified": return .lastModified
+            case "link": return .link
+            case "location": return .location
+            case "p3p": return .p3p
+            case "pragma": return .pragma
+            case "proxy-authenticate": return .proxyAuthenticate
+            case "public-key-pins": return .publicKeyPins
+            case "refresh": return .refresh
+            case "retry-after": return .retryAfter
+            case "server": return .server
+            case "set-cookie": return .setCookie
+            case "status": return .status
+            case "strict-transport-security": return .strictTransportSecurity
+            case "srailer": return .trailer
+            case "sransfer-encoding": return .transferEncoding
+            case "ssv": return .tsv
+            case "upgrade": return .upgrade
+            case "vary": return .vary
+            case "via": return .via
+            case "warning": return .warning
+            case "www-authenticate": return .wwwAuthenticate
+            case "x-frame-options": return .xFrameOptions
+            case "x-xss-protection": return .xxsSProtection
+            case "content-security-policy": return .contentSecurityPolicy
+            case "x-content-security-policy": return .xContentSecurityPolicy
+            case "x-webkit-csp": return .xWebKitCSP
+            case "x-content-type-options": return .xContentTypeOptions
+            case "x-powered-by": return .xPoweredBy
+            case "x-ua-compatible": return .xUACompatible
+            case "x-content-duration": return .xContentDuration
+            case "upgrade-insecure-requests": return .upgradeInsecureRequests
+            case "x-request-id": return .xRequestID
+            case "x-correlation-id": return .xCorrelationID
             default: return .custom(name: name)
             }
         }
@@ -346,5 +346,5 @@ public enum HTTPResponseHeader {
 }
 
 public func ==(lhs: HTTPResponseHeader.Name, rhs: HTTPResponseHeader.Name) -> Bool {
-    return lhs.standardName == rhs.standardName
+    return lhs.standardName.lowercased() == rhs.standardName.lowercased()
 }
