@@ -19,6 +19,7 @@ func _rand(to upper: Int32) -> Int32 {
 class ShimHTTPRequest: HTTPRequest {
 	var method = HTTPMethod.get
 	var path = "/"
+	var pathComponents: [String] { return [""] }
 	var queryParams = [(String, String)]()
 	var protocolVersion = (1, 1)
 	var remoteAddress = (host: "127.0.0.1", port: 8000 as UInt16)
