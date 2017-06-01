@@ -25,8 +25,15 @@ public typealias RequestHandler = (HTTPRequest, HTTPResponse) -> ()
 /// Object which maps uris to handler.
 /// RouteNavigators are given to the HTTPServer to control its content generation.
 public protocol RouteNavigator: CustomStringConvertible {
-	// Given a URI and HTTPRequest, return the handler or nil if there was none.
-	func findHandler(uri: String, webRequest: HTTPRequest) -> RequestHandler?
+	/// Given an array of URI path components and HTTPRequest, return the handler or nil if there was none.
+	func findHandler(pathComponents: [String], webRequest: HTTPRequest) -> RequestHandler?
+}
+
+public extension RouteNavigator {
+	/// Given a URI and HTTPRequest, return the handler or nil if there was none.
+	func findHandler(uri: String, webRequest: HTTPRequest) -> RequestHandler? {
+		return findHandler(pathComponents: uri.characters.split(separator: "/").map(String.init), webRequest: webRequest)
+	}
 }
 
 // The url variable key under which the remaining path in a trailing wild card will be placed.
@@ -125,7 +132,7 @@ public struct Routes {
 		}
 	}
 	
-	/// Add the given uri and handler as a route. 
+	/// Add the given uri and handler as a route.
 	/// This will add the route for all standard methods.
 	public mutating func add(uri: String, handler: @escaping RequestHandler) {
 		add(Route(uri: uri, handler: handler))
@@ -155,8 +162,7 @@ public struct Routes {
 			return s
 		}
 		
-		func findHandler(uri: String, webRequest: HTTPRequest) -> RequestHandler? {
-			let components = uri.routePathComponents
+		func findHandler(pathComponents components: [String], webRequest: HTTPRequest) -> RequestHandler? {
 			let g = components.makeIterator()
 			let method = webRequest.method
 			guard let root = self.map[method] else {
@@ -470,9 +476,9 @@ public var compatRoutes: Routes?
 // Holds the registered routes.
 @available(*, deprecated, message: "Use new Routes API instead")
 public struct RouteMap: CustomStringConvertible {
-
+	
 	public typealias RequestHandler = (HTTPRequest, HTTPResponse) -> ()
-
+	
 	public var description: String {
 		return compatRoutes?.navigator.description ?? "no routes"
 	}
@@ -488,10 +494,10 @@ public struct RouteMap: CustomStringConvertible {
 			if nil == compatRoutes {
 				compatRoutes = Routes()
 			}
-            compatRoutes?.add(method: .get, uri: path, handler: handler)
+			compatRoutes?.add(method: .get, uri: path, handler: handler)
 		}
 	}
-
+	
 	public subscript(paths: [String]) -> RequestHandler? {
 		get {
 			return nil
@@ -502,7 +508,7 @@ public struct RouteMap: CustomStringConvertible {
 			}
 		}
 	}
-
+	
 	public subscript(method: HTTPMethod, path: String) -> RequestHandler? {
 		get {
 			return nil // Swift does not currently allow set-only subscripts
@@ -517,7 +523,7 @@ public struct RouteMap: CustomStringConvertible {
 			compatRoutes?.add(method: method, uri: path, handler: handler)
 		}
 	}
-
+	
 	public subscript(method: HTTPMethod, paths: [String]) -> RequestHandler? {
 		get {
 			return nil // Swift does not currently allow set-only subscripts

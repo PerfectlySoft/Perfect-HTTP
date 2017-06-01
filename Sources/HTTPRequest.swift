@@ -27,6 +27,10 @@ public protocol HTTPRequest: class {
     var method: HTTPMethod { get set }
 	/// The request path.
     var path: String { get set }
+	/// Path components which may have been parsed during request reading.
+	/// Paths which end in a slash should have an empty component at the end of the array.
+	/// Since all paths are assumed to start with a slash, no empty leading component is included.
+	var pathComponents: [String] { get }
 	/// The parsed and decoded query/search arguments.
     var queryParams: [(String, String)] { get }
 	/// The HTTP protocol version. For example (1, 0), (1, 1), (2, 0)
