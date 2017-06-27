@@ -25,8 +25,10 @@ public enum HTTPMethod: Hashable, CustomStringConvertible {
     get,
     /// HEAD
     head,
-    /// POST
-    post,
+	/// POST
+	post,
+	/// PATCH
+	patch,
     /// PUT
     put,
     /// DELETE
@@ -39,7 +41,7 @@ public enum HTTPMethod: Hashable, CustomStringConvertible {
     custom(String)
 	/// All non-custom methods
 	public static var allMethods: [HTTPMethod] {
-		return [.options, .get, .head, .post, .put, .delete, .trace]
+		return [.options, .get, .head, .post, .patch, .put, .delete, .trace]
 	}
 	
     public static func from(string: String) -> HTTPMethod {
@@ -48,7 +50,8 @@ public enum HTTPMethod: Hashable, CustomStringConvertible {
         case "OPTIONS": return .options
         case "GET":     return .get
         case "HEAD":    return .head
-        case "POST":    return .post
+		case "POST":    return .post
+		case "PATCH":   return .patch
         case "PUT":     return .put
         case "DELETE":  return .delete
         case "TRACE":   return .trace
@@ -68,7 +71,8 @@ public enum HTTPMethod: Hashable, CustomStringConvertible {
         case .options:  return "OPTIONS"
         case .get:      return "GET"
         case .head:     return "HEAD"
-        case .post:     return "POST"
+		case .post:     return "POST"
+		case .patch:    return "PATCH"
         case .put:      return "PUT"
         case .delete:   return "DELETE"
         case .trace:    return "TRACE"
