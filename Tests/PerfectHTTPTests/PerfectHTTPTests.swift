@@ -54,6 +54,7 @@ class ShimHTTPResponse: HTTPResponse {
 	func setBody(json: [String:Any]) throws {}
 	func push(callback: @escaping (Bool) -> ()) {}
 	func completed() {}
+	func next() {}
 }
 
 class PerfectHTTPTests: XCTestCase {
@@ -340,6 +341,33 @@ class PerfectHTTPTests: XCTestCase {
 		}
 	}
 	
+	func testRoutingMulti1() {
+		
+		var r = Routes(baseUri: "/a/b/{c}") {
+			_, resp in
+		}
+		r.add(uri: "/1") {
+			_, _ in
+		}
+		r.add(method: .get, uri: "/2") {
+			_, _ in
+		}
+		r.add(method: .post, uri: "/2") {
+			_, _ in
+		}
+		let req = ShimHTTPRequest()
+		do {
+			let fnd = r.navigator.findHandlers(uri: "/a/b/c/1", webRequest: req)
+			XCTAssert(fnd != nil)
+			XCTAssert(fnd?.count == 2)
+		}
+		do {
+			let fnd = r.navigator.findHandlers(uri: "/a/b/c/2", webRequest: req)
+			XCTAssert(fnd != nil)
+			XCTAssert(fnd?.count == 2)
+		}
+	}
+	
 	func testRoutingAddPerformance() {
 		var r = Routes()
 		self.measure {
@@ -429,7 +457,8 @@ class PerfectHTTPTests: XCTestCase {
 			("testRoutingTrailingWild1", testRoutingTrailingWild1),
 			("testRoutingTrailingWild2", testRoutingTrailingWild2),
 			("testFormatDate", testFormatDate),
-			("testMimeTypeComparison", testMimeTypeComparison)
+			("testMimeTypeComparison", testMimeTypeComparison),
+			("testRoutingMulti1", testRoutingMulti1)
         ]
     }
 }

@@ -119,7 +119,7 @@ public struct StaticFileHandler {
             let eTag = self.getETag(file: file)
             if ifNoneMatch == eTag {
                 response.status = .notModified
-                return response.completed()
+                return response.next()
             }
         }
 
@@ -138,7 +138,7 @@ public struct StaticFileHandler {
         self.addETag(response: response, file: file)
 
 		if case .head = request.method {
-			return response.completed()
+			return response.next()
 		}
 		
 		// send out headers
@@ -150,7 +150,7 @@ public struct StaticFileHandler {
 			self.sendFile(remainingBytes: size, response: response, file: file) {
 				ok in
 				file.close()
-				response.completed()
+				response.next()
 			}
 		}
 	}
@@ -169,7 +169,7 @@ public struct StaticFileHandler {
             response.addHeader(.contentRange, value: "bytes \(range.lowerBound)-\(range.upperBound-1)/\(size)")
 
             if case .head = request.method {
-                return response.completed()
+                return response.next()
             }
 
             file.marker = range.lowerBound
@@ -183,7 +183,7 @@ public struct StaticFileHandler {
 					ok in
 
 					file.close()
-					response.completed()
+					response.next()
 				}
 			}
         } else if ranges.count > 0 {
