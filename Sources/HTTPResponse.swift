@@ -296,11 +296,17 @@ public protocol HTTPResponse: class {
     var headers: AnyIterator<(HTTPResponseHeader.Name, String)> { get }
 	/// Push all currently available headers and body data to the client.
 	/// May be called multiple times.
-    func push(callback: @escaping (Bool) -> ())
+	func push(callback: @escaping (Bool) -> ())
 	/// Indicate that the request has completed.
 	/// Any currently available headers and body data will be pushed to the client.
 	/// No further request related activities should be performed after calling this.
-    func completed()
+	func completed()
+	/// Indicate that the current handler has finished its work. 
+	/// Any subsequent handlers will then be executed.
+	/// If there are no further handlers then this is equivalent to calling `.completed()`
+	/// and any currently available headers and body data will be pushed to the client.
+	/// No further request related activities should be performed after calling this.
+	func next()
 }
 
 public extension HTTPResponse {
