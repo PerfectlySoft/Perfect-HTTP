@@ -202,8 +202,12 @@ extension Routes {
 		for (method, uris) in paths {
 			let root = RouteNode()
 			working[method] = root
-			for (uri, handler) in uris {
+			for path in uris {
+				let uri = path.path
+				let handler = path.handler
+				let terminal = path.terminal
 				let node = try root.getNode(uri.routePathComponents.makeIterator())
+				node.terminal = terminal
 				node.handler = handler
 			}
 		}
@@ -211,10 +215,14 @@ extension Routes {
 		return working
 	}
 	
-	typealias PathHandlerPair = (String, RequestHandler?)
+	struct PathHandler {
+		let path: String
+		let handler: RequestHandler
+		let terminal: Bool
+	}
 	
-	func paths(baseUri: String = "") -> [HTTPMethod:[PathHandlerPair]] {
-		var paths = [HTTPMethod:[PathHandlerPair]]()
+	func paths(baseUri: String = "") -> [HTTPMethod:[PathHandler]] {
+		var paths = [HTTPMethod:[PathHandler]]()
 		let newBaseUri = baseUri + self.baseUri
 		moreRoutes.forEach {
 			let newp = $0.paths(baseUri: newBaseUri)
@@ -223,22 +231,22 @@ extension Routes {
 		routes.forEach {
 			route in
 			let uri = newBaseUri + "/" + route.uri
-			var newpaths = [HTTPMethod:[PathHandlerPair]]()
+			var newpaths = [HTTPMethod:[PathHandler]]()
 			route.methods.forEach {
 				method in
-				newpaths[method] = [(uri, route.handler)]
+				newpaths[method] = [PathHandler(path: uri, handler: route.handler, terminal: true)]
 			}
 			paths = merge(newpaths, into: paths)
 		}
 		if let handler = self.handler {
 			for (key, value) in paths {
-				paths[key] = value + [(newBaseUri, handler)]
+				paths[key] = value + [PathHandler(path: newBaseUri, handler: handler, terminal: false)]
 			}
 		}
 		return paths
 	}
 	
-	func merge(_ dict: [HTTPMethod:[PathHandlerPair]], into: [HTTPMethod:[PathHandlerPair]]) -> [HTTPMethod:[PathHandlerPair]] {
+	func merge(_ dict: [HTTPMethod:[PathHandler]], into: [HTTPMethod:[PathHandler]]) -> [HTTPMethod:[PathHandler]] {
 		var ret = into
 		for (key, value) in dict {
 			if var fnd = ret[key] {
@@ -250,16 +258,6 @@ extension Routes {
 		}
 		return ret
 	}
-	
-//	func node() throws -> RouteNode {
-//		
-//	}
-}
-
-extension Route {
-//	func node() throws -> RouteNode {
-//		
-//	}
 }
 
 extension Routes {
@@ -318,6 +316,14 @@ class RouteNode {
 		return s
 	}
 	
+	func appendToHandlers(_ handlers: [RouteMap.RequestHandler?]) -> [RouteMap.RequestHandler?] {
+		// terminal handlers are not included in chaining
+		if terminal {
+			return handlers
+		}
+		return [handler] + handlers
+	}
+	
 	func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> [RouteMap.RequestHandler?]? {
 		var m = generator
 		if let p = m.next(), p != "/" {
@@ -325,67 +331,54 @@ class RouteNode {
 			// variables
 			for node in self.variables {
 				if let h = node.findHandler(currentComponent: p, generator: m, webRequest: webRequest) {
-					return [handler] + h//self.successfulRoute(currentComponent: curComp, handlers: node.successfulRoute(currentComponent: p, handlers: [], webRequest: webRequest), webRequest: webRequest)
+					return appendToHandlers(h)
 				}
 			}
 			
 			// paths
 			if let node = self.subNodes[p.lowercased()] {
 				if let h = node.findHandler(currentComponent: p, generator: m, webRequest: webRequest) {
-					return [handler] + h//self.successfulRoute(currentComponent: curComp, handlers: node.successfulRoute(currentComponent: p, handlers: [], webRequest: webRequest), webRequest: webRequest)
+					return appendToHandlers(h)
 				}
 			}
 			
 			// wildcard
 			if let node = self.wildCard {
 				if let h = node.findHandler(currentComponent: p, generator: m, webRequest: webRequest) {
-					return [handler] + h//self.successfulRoute(currentComponent: curComp, handlers: node.successfulRoute(currentComponent: p, handlers: [], webRequest: webRequest), webRequest: webRequest)
+					return appendToHandlers(h)
 				}
 			}
 			
 			// trailing wildcard
 			if let node = self.trailingWildCard {
 				if let h = node.findHandler(currentComponent: p, generator: m, webRequest: webRequest) {
-					return [handler] + h//self.successfulRoute(currentComponent: curComp, handlers: node.successfulRoute(currentComponent: p, handlers: [], webRequest: webRequest), webRequest: webRequest)
+					return appendToHandlers(h)
 				}
 			}
 			
 		} else if let handler = self.handler {
-			
-			return [handler]
-			
+			if terminal {
+				return [handler]
+			}
+			return nil			
 		} else {
 			// wildcards
 			if let node = self.wildCard {
 				if let h = node.findHandler(currentComponent: "", generator: m, webRequest: webRequest) {
-					return [handler] + h//self.successfulRoute(currentComponent: curComp, handlers: node.successfulRoute(currentComponent: "", handlers: [], webRequest: webRequest), webRequest: webRequest)
+					return appendToHandlers(h)
 				}
 			}
 			
 			// trailing wildcard
 			if let node = self.trailingWildCard {
 				if let h = node.findHandler(currentComponent: "", generator: m, webRequest: webRequest) {
-					return [handler] + h//self.successfulRoute(currentComponent: curComp, handlers: node.successfulRoute(currentComponent: "", handlers: [], webRequest: webRequest), webRequest: webRequest)
+					return appendToHandlers(h)
 				}
 			}
 		}
 		return nil
 	}
-/*
-	func addPathSegments(_ routes: Routes) throws {
-		let target = try getNode(routes.baseUri.routePathComponents.makeIterator())
-		if let handler = routes.handler {
-			target.handler = handler
-		}
-		try routes.moreRoutes.forEach { try target.addPathSegments($0) }
-		try routes.routes.forEach { try target.addPathSegment($0) }
-	}
-	
-	func addPathSegment(_ route: Route) throws {
-		let node = try getNode(route.uri.routePathComponents.makeIterator())
-		node.handler = route.handler
-	}
-*/
+
 	func getNode(_ ing: ComponentGenerator) throws -> RouteNode {
 		var g = ing
 		if let comp = g.next() {
