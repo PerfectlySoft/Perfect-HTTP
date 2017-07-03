@@ -368,6 +368,28 @@ class PerfectHTTPTests: XCTestCase {
 		}
 	}
 	
+	func testRoutingMulti2() {
+		
+		var r = Routes()
+		r.add(uri: "/") {
+			_, _ in
+		}
+		r.add(method: .get, uri: "/1") {
+			_, _ in
+		}
+		let req = ShimHTTPRequest()
+		do {
+			let fnd = r.navigator.findHandlers(uri: "/", webRequest: req)
+			XCTAssert(fnd != nil)
+			XCTAssert(fnd?.count == 1)
+		}
+		do {
+			let fnd = r.navigator.findHandlers(uri: "/1", webRequest: req)
+			XCTAssert(fnd != nil)
+			XCTAssert(fnd?.count == 1)
+		}
+	}
+	
 	func testRoutingAddPerformance() {
 		var r = Routes()
 		self.measure {
