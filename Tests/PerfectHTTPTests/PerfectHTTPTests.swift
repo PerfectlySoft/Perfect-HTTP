@@ -317,6 +317,34 @@ class PerfectHTTPTests: XCTestCase {
 		}
 	}
 	
+	func testRoutingTrailingSlash4() {
+		var r = Routes()
+		let badHandler = {
+			(_:HTTPRequest, resp:HTTPResponse) in
+			resp.status = .internalServerError
+		}
+		let goodHandler = {
+			(_:HTTPRequest, resp:HTTPResponse) in
+			resp.status = .notFound
+		}
+		r.add(method: .get, uri: "/", handler: { _, _ in })
+		r.add(method: .get, uri: "/test/", handler: goodHandler)
+		r.add(method: .get, uri: "/**", handler: badHandler)
+		let resp = ShimHTTPResponse()
+		do {
+			let fnd = r.navigator.findHandler(uri: "/", webRequest: resp.request)
+			XCTAssert(fnd != nil)
+		}
+		do {
+			let fnd = r.navigator.findHandler(uri: "/test/", webRequest: resp.request)
+			XCTAssert(fnd != nil)
+			fnd?(resp.request, resp)
+			guard case .notFound = resp.status else {
+				return XCTAssert(false, "Wrong handler")
+			}
+		}
+	}
+	
 	func testRoutingVars() {
 		let uri = "/fOo/{bar}/baZ/{bum}"
 		var r = Routes()
@@ -531,7 +559,8 @@ class PerfectHTTPTests: XCTestCase {
 			("testRoutingMulti2", testRoutingMulti2),
 			("testRoutingTrailingSlash1", testRoutingTrailingSlash1),
 			("testRoutingTrailingSlash2", testRoutingTrailingSlash2),
-			("testRoutingTrailingSlash3", testRoutingTrailingSlash3)
+			("testRoutingTrailingSlash3", testRoutingTrailingSlash3),
+			("testRoutingTrailingSlash4", testRoutingTrailingSlash4)
         ]
     }
 }
