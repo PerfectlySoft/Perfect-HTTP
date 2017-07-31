@@ -122,7 +122,7 @@ public struct Routes {
 	
 	/// Add one Route to this object.
 	public mutating func add(_ route: Route, routes vroots: Route...) {
-		routes.append(route)//Route(methods: route.methods, uri: self.baseUri + Routes.sanitizeUri(route.uri), handler: route.handler))
+		routes.append(route)
 		vroots.forEach { add($0) }
 	}
 	
@@ -153,8 +153,10 @@ public struct Routes {
 	}
 	
 	static func sanitizeUri(_ uri: String) -> String {
-		let split = uri.routePathComponents
-		return "/" + split.joined(separator: "/")
+		let endSlash = uri.hasSuffix("/")
+		let split = uri.characters.split(separator: "/").map(String.init)
+		let ret = "/" + split.joined(separator: "/") + (endSlash ? "/" : "")
+		return ret
 	}
 	
 	struct Navigator: RouteNavigator {
@@ -169,10 +171,13 @@ public struct Routes {
 		}
 		
 		func findHandlers(pathComponents components: [String], webRequest: HTTPRequest) -> [RequestHandler]? {
-			let g = components.makeIterator()
 			let method = webRequest.method
-			guard let root = self.map[method] else {
+			guard !components.isEmpty, let root = self.map[method] else {
 				return nil
+			}
+			var g = components.makeIterator()
+			if components[0] == "/" {
+				_ = g.next()
 			}
 			guard let handlers = root.findHandler(currentComponent: "", generator: g, webRequest: webRequest) else {
 				return nil
@@ -203,10 +208,14 @@ extension Routes {
 			let root = RouteNode()
 			working[method] = root
 			for path in uris {
-				let uri = path.path
+				let uri = Routes.sanitizeUri(path.path)
 				let handler = path.handler
 				let terminal = path.terminal
-				let node = try root.getNode(uri.routePathComponents.makeIterator())
+				var gen = uri.routePathComponents.makeIterator()
+				if uri.hasPrefix("/") {
+					_ = gen.next()
+				}
+				let node = try root.getNode(gen)
 				node.terminal = terminal
 				node.handler = handler
 			}
@@ -272,8 +281,9 @@ extension Routes {
 
 extension String {
 	var routePathComponents: [String] {
-		let components = self.characters.split(separator: "/").map(String.init)
-		return components
+		return self.filePathComponents
+//		let components = self.characters.split(separator: "/").map(String.init)
+//		return components
 	}
 }
 
@@ -282,12 +292,14 @@ private enum RouteException: Error {
 }
 
 private enum RouteItemType {
-	case wildcard, trailingWildcard, variable(String), path
+	case wildcard, trailingWildcard, variable(String), path, trailingSlash
 	init(_ comp: String) {
 		if comp == "*" {
 			self = .wildcard
 		} else if comp == "**" {
 			self = .trailingWildcard
+		} else if comp == "/" {
+			self = .trailingSlash
 		} else if comp.characters.count >= 3 && comp[comp.startIndex] == "{" && comp[comp.index(before: comp.endIndex)] == "}" {
 			self = .variable(comp[comp.index(after: comp.startIndex)..<comp.index(before: comp.endIndex)])
 		} else {
@@ -326,7 +338,7 @@ class RouteNode {
 	
 	func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> [RouteMap.RequestHandler?]? {
 		var m = generator
-		if let p = m.next(), p != "/" {
+		if let p = m.next() {
 			
 			// variables
 			for node in self.variables {
@@ -398,6 +410,12 @@ class RouteNode {
 					trailingWildCard = RouteTrailingWildCard()
 				}
 				node = trailingWildCard!
+			case .trailingSlash:
+				guard nil == g.next() else {
+					throw RouteException.invalidRoute
+				}
+				node = RouteTrailingSlash()
+				subNodes[comp] = node
 			case .path:
 				let compLower = comp.lowercased()
 				if let existing = subNodes[compLower] {
@@ -514,6 +532,28 @@ class RouteTrailingWildCard: RouteWildCard {
 	}
 }
 
+class RouteTrailingSlash: RouteNode {
+	
+	override func descriptionTabbed(_ tabCount: Int) -> String {
+		var s = "/"
+		if let _ = self.handler {
+			s.append("+h\n")
+		} else {
+			s.append("\n")
+		}
+		s.append(self.descriptionTabbedInner(tabCount))
+		return s
+	}
+	
+	override func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> [RouteMap.RequestHandler?]? {
+		var m = generator
+		guard curComp == "/", nil == m.next(), let handler = self.handler else {
+			return nil
+		}
+		return [handler]
+	}
+}
+
 class RouteVariable: RouteNode {
 	
 	let name: String
@@ -543,18 +583,6 @@ class RouteVariable: RouteNode {
 		}
 		return nil
 	}
-	
-//	override func successfulRoute(currentComponent currComp: String, handlers: [RouteMap.RequestHandler], webRequest: HTTPRequest) -> [RouteMap.RequestHandler] {
-//		let a: [RouteMap.RequestHandler] = [{
-//			req, resp in
-//			if let decodedComponent = currComp.stringByDecodingURL {
-//				webRequest.urlVariables[self.name] = decodedComponent
-//			} else {
-//				webRequest.urlVariables[self.name] = currComp
-//			}
-//		}]
-//		return super.successfulRoute(currentComponent: currComp, handlers: handlers + a, webRequest: webRequest)
-//	}
 }
 
 // -- old --

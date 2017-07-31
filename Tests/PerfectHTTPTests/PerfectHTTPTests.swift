@@ -262,12 +262,59 @@ class PerfectHTTPTests: XCTestCase {
 	}
 	
 	func testRoutingWild() {
-		let uri = "/foo/*/baz/*"		
+		let uri = "/foo/*/baz/*"
 		var r = Routes()
 		r.add(method: .get, uri: uri, handler: { _, _ in })
 		let req = ShimHTTPRequest()
 		let fnd = r.navigator.findHandler(uri: "/foo/bar/baz/bum", webRequest: req)
 		XCTAssert(fnd != nil)
+	}
+	
+	func testRoutingTrailingSlash1() {
+		let uri = "/foo/*/baz/"
+		var r = Routes()
+		r.add(method: .get, uri: uri, handler: { _, _ in })
+		let req = ShimHTTPRequest()
+		let fnd = r.navigator.findHandler(uri: "/foo/bar/baz/", webRequest: req)
+		XCTAssert(fnd != nil)
+		let fnd2 = r.navigator.findHandler(uri: "/foo/bar/baz", webRequest: req)
+		XCTAssert(fnd2 == nil)
+	}
+	
+	func testRoutingTrailingSlash2() {
+		let uri = "/foo/*/baz"
+		var r = Routes()
+		r.add(method: .get, uri: uri, handler: { _, _ in })
+		let req = ShimHTTPRequest()
+		let fnd = r.navigator.findHandler(uri: "/foo/bar/baz/", webRequest: req)
+		XCTAssert(fnd == nil)
+		let fnd2 = r.navigator.findHandler(uri: "/foo/bar/baz", webRequest: req)
+		XCTAssert(fnd2 != nil)
+	}
+	
+	func testRoutingTrailingSlash3() {
+		let uri1 = "/foo/bar/baz"
+		let uri2 = "/foo/"
+		var r = Routes()
+		r.add(method: .get, uri: uri1, handler: { _, _ in })
+		r.add(method: .get, uri: uri2, handler: { _, _ in })
+		let req = ShimHTTPRequest()
+		do {
+			let fnd = r.navigator.findHandler(uri: "/foo/bar/baz/", webRequest: req)
+			XCTAssert(fnd == nil)
+		}
+		do {
+			let fnd = r.navigator.findHandler(uri: "/foo/bar/baz", webRequest: req)
+			XCTAssert(fnd != nil)
+		}
+		do {
+			let fnd = r.navigator.findHandler(uri: "/foo/", webRequest: req)
+			XCTAssert(fnd != nil)
+		}
+		do {
+			let fnd = r.navigator.findHandler(uri: "/foo", webRequest: req)
+			XCTAssert(fnd == nil)
+		}
 	}
 	
 	func testRoutingVars() {
@@ -480,7 +527,11 @@ class PerfectHTTPTests: XCTestCase {
 			("testRoutingTrailingWild2", testRoutingTrailingWild2),
 			("testFormatDate", testFormatDate),
 			("testMimeTypeComparison", testMimeTypeComparison),
-			("testRoutingMulti1", testRoutingMulti1)
+			("testRoutingMulti1", testRoutingMulti1),
+			("testRoutingMulti2", testRoutingMulti2),
+			("testRoutingTrailingSlash1", testRoutingTrailingSlash1),
+			("testRoutingTrailingSlash2", testRoutingTrailingSlash2),
+			("testRoutingTrailingSlash3", testRoutingTrailingSlash3)
         ]
     }
 }
