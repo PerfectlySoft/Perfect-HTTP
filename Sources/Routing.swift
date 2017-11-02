@@ -154,7 +154,7 @@ public struct Routes {
 	
 	static func sanitizeUri(_ uri: String) -> String {
 		let endSlash = uri.hasSuffix("/")
-		let split = uri.characters.split(separator: "/").map(String.init)
+		let split = uri.split(separator: "/").map(String.init)
 		let ret = "/" + split.joined(separator: "/") + (endSlash ? "/" : "")
 		return ret
 	}
@@ -300,7 +300,7 @@ private enum RouteItemType {
 			self = .trailingWildcard
 		} else if comp == "/" {
 			self = .trailingSlash
-		} else if comp.characters.count >= 3 && comp[comp.startIndex] == "{" && comp[comp.index(before: comp.endIndex)] == "}" {
+		} else if comp.count >= 3 && comp[comp.startIndex] == "{" && comp[comp.index(before: comp.endIndex)] == "}" {
 			self = .variable(comp[comp.index(after: comp.startIndex)..<comp.index(before: comp.endIndex)])
 		} else {
 			self = .path

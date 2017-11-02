@@ -115,7 +115,7 @@ public final class MimeReader {
 			self.multi = true
 			if let range = contentType.range(of: kBoundary) {
 				
-				let startIndex = contentType.index(range.lowerBound, offsetBy: kBoundary.characters.count+1)
+				let startIndex = contentType.index(range.lowerBound, offsetBy: kBoundary.count+1)
 				let endIndex = contentType.endIndex
 				
 				let boundaryString = contentType[startIndex..<endIndex]
@@ -207,12 +207,12 @@ public final class MimeReader {
 				
 			case .stateBoundary:
 				
-				if position.distance(to: end) < self.boundary.characters.count + 2 {
-					self.buffer = Array(byts[position..<end])
+				if position.distance(to: end) < boundary.count + 2 {
+					buffer = Array(byts[position..<end])
 					clearBuffer = false
 					position = end
 				} else {
-					position = position.advanced(by: self.boundary.characters.count)
+					position = position.advanced(by: boundary.count)
 					if byts[position] == mime_dash && byts[position.advanced(by: 1)] == mime_dash {
 						self.state = .stateDone
 						position = position.advanced(by: 2)
@@ -272,7 +272,7 @@ public final class MimeReader {
 					}
 					if (eolPos == position || position != end) && position.distance(to: end) > 1 && byts[position] == mime_cr && byts[position.advanced(by: 1)] == mime_lf {
 						position = position.advanced(by: 2)
-						if spec.fileName.characters.count > 0 {
+						if spec.fileName.count > 0 {
 							openTempFile(spec: spec)
 							self.state = .stateFile
 						} else {
@@ -304,7 +304,7 @@ public final class MimeReader {
 								spec.fieldValueTempBytes = nil
 								break
 								
-							} else if position.distance(to: end) - 2 < self.boundary.characters.count {
+							} else if position.distance(to: end) - 2 < self.boundary.count {
 								// we are at the eol, but check to see if the next line may be starting a boundary
 								if position.distance(to: end) < 4 || (byts[position.advanced(by: 2)] == mime_dash && byts[position.advanced(by: 3)] == mime_dash) {
 									self.buffer = Array(byts[position..<end])
@@ -346,7 +346,7 @@ public final class MimeReader {
 								chmod(spec.file!.path, mode_t(S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH))
 								break
 								
-							} else if position.distance(to: end) - 2 < self.boundary.characters.count {
+							} else if position.distance(to: end) - 2 < self.boundary.count {
 								// we are at the eol, but check to see if the next line may be starting a boundary
 								if position.distance(to: end) < 4 || (byts[position.advanced(by: 2)] == mime_dash && byts[position.advanced(by: 3)] == mime_dash) {
 									self.buffer = Array(byts[position..<end])
@@ -369,7 +369,7 @@ public final class MimeReader {
 							if qPtr[writeEnd + 1] == mime_lf {
 								if isBoundaryStart(bytes: byts, start: writeEnd + 2) {
 									break
-								} else if end - writeEnd - 2 < self.boundary.characters.count {
+								} else if end - writeEnd - 2 < self.boundary.count {
 									// we are at the eol, but check to see if the next line may be starting a boundary
 									if end - writeEnd < 4 || (qPtr[writeEnd + 2] == mime_dash && qPtr[writeEnd + 3] == mime_dash) {
 										break
