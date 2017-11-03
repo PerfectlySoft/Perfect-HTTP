@@ -78,6 +78,9 @@ public protocol HTTPRequest: class {
 	/// POST body data treated as UTF-8 bytes and decoded into a String, if possible.
 	/// If the POST content type is multipart/form-data then this will be nil.
     var postBodyString: String? { get }
+    /// POST body data as JSON, if possible. If there is no body or it cannot be parsed
+    /// will be nil
+    var postBodyJson: [String: Any]? { get }
 	/// If the POST content type is multipart/form-data then this will contain the decoded form 
 	/// parameters and file upload data. 
 	/// This value will be nil if the request is not POST or did not have a multipart/form-data 
