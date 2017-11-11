@@ -1,3 +1,4 @@
+// swift-tools-version:4.0
 //
 //  Package.swift
 //  PerfectHTTP
@@ -22,22 +23,31 @@ import PackageDescription
 #if os(Linux)
 let package = Package(
 	name: "PerfectHTTP",
-	targets: [],
-	dependencies: [
-		.Package(url: "https://github.com/PerfectlySoft/PerfectLib.git", majorVersion: 3),
-		.Package(url: "https://github.com/PerfectlySoft/Perfect-Net.git", majorVersion: 3),
-		.Package(url: "https://github.com/PerfectlySoft/Perfect-LinuxBridge.git", majorVersion: 3)
+	products: [
+		.library(name: "PerfectHTTP", type: .`dynamic`, targets: ["PerfectHTTP"])
 	],
-	exclude: []
+	dependencies: [
+		.package(url: "https://github.com/PerfectlySoft/PerfectLib.git", from: "3.0.0"),
+		.package(url: "https://github.com/PerfectlySoft/Perfect-Net.git", from: "3.0.0"),
+		.package(url: "https://github.com/PerfectlySoft/Perfect-LinuxBridge.git", from: "3.0.0")
+	],
+ 	targets: [
+		.target(name: "PerfectHTTP", dependencies: ["PerfectLib", "PerfectNet", "LinuxBridge"], path: "Sources"),
+  ],
+  swiftLanguageVersions: [3]
 )
 #else
 let package = Package(
 	name: "PerfectHTTP",
-	targets: [],
-	dependencies: [
-		.Package(url: "https://github.com/PerfectlySoft/PerfectLib.git", majorVersion: 3),
-		.Package(url: "https://github.com/PerfectlySoft/Perfect-Net.git", majorVersion: 3)
+	products: [
+		.library(name: "PerfectHTTP", type: .`dynamic`, targets: ["PerfectHTTP"])
 	],
-	exclude: []
+	dependencies: [
+		.package(url: "https://github.com/PerfectlySoft/PerfectLib.git", from: "3.0.0"),
+		.package(url: "https://github.com/PerfectlySoft/Perfect-Net.git", from: "3.0.0")
+	], targets: [
+		.target(name: "PerfectHTTP", dependencies: ["PerfectLib", "PerfectNet"], path: "Sources"),
+  ],
+  swiftLanguageVersions: [3]
 )
 #endif
