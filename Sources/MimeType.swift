@@ -93,7 +93,7 @@ public struct MimeType: ExpressibleByStringLiteral, CustomStringConvertible, Com
     
     /// top-level/sub-type
     public var shortType: String {
-        let split = longType.characters.split(separator: ";").map(String.init)
+        let split = longType.split(separator: ";").map(String.init)
         if split.count > 0 {
             return split[0]
         }
@@ -103,7 +103,7 @@ public struct MimeType: ExpressibleByStringLiteral, CustomStringConvertible, Com
     
     /// Top-level type
     public var type: TopType {
-        let split = longType.characters.split(separator: "/").map(String.init)
+        let split = longType.split(separator: "/").map(String.init)
         if split.count > 0 {
             return TopType.typeFrom(string: split[0])
         }
@@ -111,20 +111,20 @@ public struct MimeType: ExpressibleByStringLiteral, CustomStringConvertible, Com
     }
     /// Sub-type
     public var subType: String {
-        let split = longType.characters.split(separator: "/").map(String.init)
+        let split = longType.split(separator: "/").map(String.init)
         if split.count > 1 {
             let subType = split[1]
-            let split = subType.characters.split(separator: ";").map(String.init)
+            let split = subType.split(separator: ";").map(String.init)
             return split[0]
         }
         return defaultSubType
     }
     /// Parameters, if any.
     public var parameters: String? {
-        let split = longType.characters.split(separator: "/").map(String.init)
+        let split = longType.split(separator: "/").map(String.init)
         if split.count > 1 {
             let subType = split[1]
-            let split = subType.characters.split(separator: ";").map(String.init)
+            let split = subType.split(separator: ";").map(String.init)
             if split.count > 1 {
                 return split[1]
             }
@@ -548,6 +548,7 @@ let mimeMap = ["123" : "application/vnd.lotus-1-2-3",
                "m2v" : "video/mpeg",
                "m3a" : "audio/mpeg",
                "m3u" : "audio/x-mpegurl",
+               "m4a" : "audio/mpeg",
                "m4u" : "video/vnd.mpegurl",
                "m4v" : "video/x-m4v",
                "ma" : "application/mathematica",
@@ -707,6 +708,7 @@ let mimeMap = ["123" : "application/vnd.lotus-1-2-3",
                "pkg" : "application/octet-stream",
                "pki" : "application/pkixcmp",
                "pkipath" : "application/pkix-pkipath",
+               "pkpass": "application/vnd.apple.pkpass",
                "pl" : "text/plain",
                "plb" : "application/vnd.3gpp.pic-bw-large",
                "plc" : "application/vnd.mobius.plc",

@@ -127,8 +127,8 @@ public extension HTTPRequest {
         guard let cookie = self.header(.cookie) else {
             return [(String, String)]()
         }
-        return cookie.characters.split(separator: ";").flatMap {
-            let d = $0.split(separator: "=")//.flatMap { String($0).stringByDecodingURL }
+        return cookie.split(separator: ";").flatMap {
+            let d = $0.split(separator: "=")
             guard d.count == 2 else { return nil }
 			let d2 = d.map { String($0.filter { $0 != Character(" ") }).stringByDecodingURL ?? "" }
             return (d2[0], d2[1])

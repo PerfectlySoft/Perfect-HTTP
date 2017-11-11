@@ -47,7 +47,7 @@ extension UInt8 {
 	// but outputs two characters. i.e. 0 padded
 	var hexString: String {
 		let s = String(self, radix: 16)
-		if s.characters.count == 1 {
+		if s.count == 1 {
 			return "0" + s
 		}
 		return s
@@ -278,7 +278,7 @@ public struct StaticFileHandler {
 
 	// bytes=0-3/7-9/10-15
 	func parseRangeHeader(fromHeader header: String, max: Int) -> [Range<Int>] {
-		let initialSplit = header.characters.split(separator: "=")
+		let initialSplit = header.split(separator: "=")
 		guard initialSplit.count == 2 && String(initialSplit[0]) == "bytes" else {
 			return [Range<Int>]()
 		}
@@ -289,7 +289,7 @@ public struct StaticFileHandler {
 	// 0-3
 	// 0-
 	func parseOneRange(fromString string: String, max: Int) -> Range<Int>? {
-		let split = string.characters.split(separator: "-", omittingEmptySubsequences: false).map { String($0) }
+		let split = string.split(separator: "-", omittingEmptySubsequences: false).map { String($0) }
 		guard split.count == 2 else {
 			return nil
 		}

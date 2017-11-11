@@ -9,10 +9,10 @@ import PerfectLib
 
 // random from 1 to upper, inclusive
 func _rand(to upper: Int32) -> Int32 {
-	#if os(OSX)
-		return Int32(arc4random_uniform(UInt32(upper-1))) + 1
-	#else
+	#if os(Linux)
 		return (SwiftGlibc.rand() % Int32(upper-1)) + 1
+	#else
+		return Int32(arc4random_uniform(UInt32(upper-1))) + 1
 	#endif
 }
 
