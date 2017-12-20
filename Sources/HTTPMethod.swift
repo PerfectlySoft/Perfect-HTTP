@@ -41,11 +41,10 @@ public enum HTTPMethod: Hashable, CustomStringConvertible {
     custom(String)
 	/// All non-custom methods
 	public static var allMethods: [HTTPMethod] {
-		return [.options, .get, .head, .post, .patch, .put, .delete, .trace]
+		return [.options, .get, .head, .post, .patch, .put, .delete, .trace, .connect]
 	}
 	
     public static func from(string: String) -> HTTPMethod {
-        
         switch string {
         case "OPTIONS": return .options
         case "GET":     return .get

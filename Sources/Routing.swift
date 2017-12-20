@@ -282,8 +282,6 @@ extension Routes {
 extension String {
 	var routePathComponents: [String] {
 		return self.filePathComponents
-//		let components = self.characters.split(separator: "/").map(String.init)
-//		return components
 	}
 }
 
