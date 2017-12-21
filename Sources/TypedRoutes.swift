@@ -26,6 +26,13 @@ public struct HTTPResponseError: Error, Codable, CustomStringConvertible {
 	}
 }
 
+// I put this here because it seems inefficient and I hope to adjust it
+extension Data {
+	var uint8Array: [UInt8] {
+		return map{$0}
+	}
+}
+
 private let lastObjectKey = "_last_object_"
 
 public extension HTTPRequest {
@@ -53,7 +60,12 @@ public extension HTTPRequest {
 			} else {
 				data = Data(bytes: body)
 			}
-			return try JSONDecoder().decode(A.self, from: data)
+			do {
+				return try JSONDecoder().decode(A.self, from: data)
+			} catch let error as DecodingError
+				where error.localizedDescription == "The data couldn’t be read because it is missing." {
+				throw HTTPResponseError(status: .badRequest, description: "Error while decoding request object. This is usually caused by API misuse. Check your request input names.")
+			}
 		}
 		throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Unsupported content-type: \(contentType)."))
 	}
@@ -69,6 +81,32 @@ public extension HTTPRequest {
 			}
 			return input
 		}
+	}
+}
+
+private extension HTTPResponse {
+	func handleError(error: Error) {
+		do {
+			switch error {
+			case let error as HTTPResponseError:
+				try encode(error).completed(status: error.status)
+			case let error as CustomStringConvertible:
+				let responseError = HTTPResponseError(status: .internalServerError, description: error.description)
+				try encode(responseError).completed(status: .internalServerError)
+			default:
+				setBody(string: error.localizedDescription)
+					.completed(status: .internalServerError)
+			}
+		} catch _ {
+			setBody(string: "\(error)")
+				.completed(status: .internalServerError)
+		}
+	}
+	func encode<A: Encodable>(_ t: A) throws -> Self {
+		let tryJson = try JSONEncoder().encode(t).uint8Array
+		setBody(bytes: tryJson)
+			.setHeader(.contentType, value: MimeType(type: .application, subType: "json").longType)
+		return self
 	}
 }
 
@@ -110,16 +148,8 @@ public struct TRoutes<I, O>: TypedRoutesProtocol {
 				let input: InputType = try req.getInput()
 				req.scratchPad[lastObjectKey] = try self.typedHandler(input)
 				resp.next()
-			} catch let error as HTTPResponseError {
-				guard let tryJson = try? JSONEncoder().encode(error).map({$0}) else {
-					return resp.setBody(string: error.description).completed(status: error.status)
-				}
-				resp.setBody(bytes: tryJson)
-					.setHeader(.contentType, value: MimeType(type: .application, subType: "json").longType)
-					.completed(status: error.status)
 			} catch {
-				resp.setBody(string: "\(error.localizedDescription)")
-					.completed(status: .internalServerError)
+				resp.handleError(error: error)
 			}
 		}
 	}
@@ -168,19 +198,11 @@ public struct TRoute<I, O: Codable>: TypedRouteProtocol {
 			req, resp in
 			do {
 				let input: InputType = try req.getInput()
-				resp.setBody(bytes: try JSONEncoder().encode(try self.typedHandler(input)).map{$0})
+				resp.setBody(bytes: try JSONEncoder().encode(try self.typedHandler(input)).uint8Array)
 					.setHeader(.contentType, value: MimeType(type: .application, subType: "json").longType)
 					.completed(status: .ok)
-			} catch let error as HTTPResponseError {
-				guard let tryJson = try? JSONEncoder().encode(error).map({$0}) else {
-					return resp.setBody(string: error.description).completed(status: error.status)
-				}
-				resp.setBody(bytes: tryJson)
-					.setHeader(.contentType, value: MimeType(type: .application, subType: "json").longType)
-					.completed(status: error.status)
 			} catch {
-				resp.setBody(string: "\(error.localizedDescription)")
-					.completed(status: .internalServerError)
+				resp.handleError(error: error)
 			}
 		}
 	}
