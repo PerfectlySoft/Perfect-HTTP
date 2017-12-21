@@ -198,9 +198,7 @@ public struct TRoute<I, O: Codable>: TypedRouteProtocol {
 			req, resp in
 			do {
 				let input: InputType = try req.getInput()
-				resp.setBody(bytes: try JSONEncoder().encode(try self.typedHandler(input)).uint8Array)
-					.setHeader(.contentType, value: MimeType(type: .application, subType: "json").longType)
-					.completed(status: .ok)
+				try resp.encode(try self.typedHandler(input)).completed(status: .ok)
 			} catch {
 				resp.handleError(error: error)
 			}
