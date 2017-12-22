@@ -73,23 +73,23 @@ public struct StaticFileHandler {
     /// Main entry point. A registered URL handler should call this and pass the request and response objects.
     /// After calling this, the StaticFileHandler owns the request and will handle it until completion.
 	public func handleRequest(request: HTTPRequest, response: HTTPResponse) {
+		func fnf(msg: String) {
+			response.status = .notFound
+			response.appendBody(string: msg)
+			// !FIX! need 404.html or some such thing
+			response.completed()
+		}
         var path = request.path
 		if path[path.index(before: path.endIndex)] == "/" {
 			path.append("index.html") // !FIX! needs to be configurable
 		}
-		let file = File(documentRoot + "/" + path)
-
-        func fnf(msg: String) {
-            response.status = .notFound
-            response.appendBody(string: msg)
-            // !FIX! need 404.html or some such thing
-            response.completed()
-        }
-
+		guard let sanitized = sanitizePathTraversal(path) else {
+			return fnf(msg: "The file \(path) could not be opened.")
+		}
+		let file = File(documentRoot + "/" + sanitized)
 		guard file.exists else {
             return fnf(msg: "The file \(path) was not found.")
 		}
-		
         do {
             try file.open(.read)
             self.sendFile(request: request, response: response, file: file)
@@ -97,7 +97,24 @@ public struct StaticFileHandler {
             return fnf(msg: "The file \(path) could not be opened \(error).")
         }
 	}
-
+	// returns nil if the path is invalid
+	func sanitizePathTraversal(_ path: String) -> String? {
+		var ret: [String] = []
+		for component in path.filePathComponents {
+			switch component {
+			case "", "/", ".": continue
+			case "..":
+				if ret.isEmpty { // invalid
+					return nil
+				}
+				ret.removeLast()
+			default:
+				ret.append(component)
+			}
+		}
+		return ret.joined(separator: "/")
+	}
+	
 	func shouldSkipSendfile(response: HTTPResponse) -> Bool {
 		if self.allowResponseFilters {
 			return true
