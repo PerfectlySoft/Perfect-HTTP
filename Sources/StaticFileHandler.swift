@@ -79,7 +79,7 @@ public struct StaticFileHandler {
 			// !FIX! need 404.html or some such thing
 			response.completed()
 		}
-        var path = request.path
+        var path = request.path.removingPercentEncoding ?? request.path
 		if path[path.index(before: path.endIndex)] == "/" {
 			path.append("index.html") // !FIX! needs to be configurable
 		}
