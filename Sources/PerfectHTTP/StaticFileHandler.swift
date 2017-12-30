@@ -79,23 +79,28 @@ public struct StaticFileHandler {
 			// !FIX! need 404.html or some such thing
 			response.completed()
 		}
-        var path = request.path
-		if path[path.index(before: path.endIndex)] == "/" {
-			path.append("index.html") // !FIX! needs to be configurable
+		var pathComponents = request.pathComponents
+		if pathComponents.last == "/" {
+			pathComponents.removeLast()
+			pathComponents.append("index.html") // !FIX! needs to be configurable
 		}
+		if pathComponents.first == "/" {
+			pathComponents.removeFirst()
+		}
+		let path = pathComponents.joined(separator: "/")
 		guard let sanitized = sanitizePathTraversal(path) else {
-			return fnf(msg: "The file \(path) could not be opened.")
+			return fnf(msg: "The file /\(path) could not be opened.")
 		}
 		let file = File(documentRoot + "/" + sanitized)
 		guard file.exists else {
-            return fnf(msg: "The file \(path) was not found.")
+			return fnf(msg: "The file /\(path) was not found.")
 		}
-        do {
-            try file.open(.read)
-            self.sendFile(request: request, response: response, file: file)
-        } catch {
-            return fnf(msg: "The file \(path) could not be opened \(error).")
-        }
+		do {
+			try file.open(.read)
+			self.sendFile(request: request, response: response, file: file)
+		} catch {
+			return fnf(msg: "The file /\(path) could not be opened \(error).")
+		}
 	}
 	// returns nil if the path is invalid
 	func sanitizePathTraversal(_ path: String) -> String? {
