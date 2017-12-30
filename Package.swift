@@ -24,7 +24,7 @@ import PackageDescription
 let package = Package(
 	name: "PerfectHTTP",
 	products: [
-		.library(name: "PerfectHTTP", type: .`dynamic`, targets: ["PerfectHTTP"])
+		.library(name: "PerfectHTTP", targets: ["PerfectHTTP"])
 	],
 	dependencies: [
 		.package(url: "https://github.com/PerfectlySoft/PerfectLib.git", from: "3.0.0"),
@@ -32,7 +32,8 @@ let package = Package(
 		.package(url: "https://github.com/PerfectlySoft/Perfect-LinuxBridge.git", from: "3.0.0")
 	],
  	targets: [
-		.target(name: "PerfectHTTP", dependencies: ["PerfectLib", "PerfectNet", "LinuxBridge"], path: "Sources"),
+		.target(name: "PerfectHTTP", dependencies: ["PerfectLib", "PerfectNet", "LinuxBridge"]),
+		.testTarget(name: "PerfectHTTPTests", dependencies: ["PerfectHTTP"])
   ],
   swiftLanguageVersions: [3]
 )
@@ -40,13 +41,14 @@ let package = Package(
 let package = Package(
 	name: "PerfectHTTP",
 	products: [
-		.library(name: "PerfectHTTP", type: .`dynamic`, targets: ["PerfectHTTP"])
+		.library(name: "PerfectHTTP", targets: ["PerfectHTTP"])
 	],
 	dependencies: [
 		.package(url: "https://github.com/PerfectlySoft/PerfectLib.git", from: "3.0.0"),
 		.package(url: "https://github.com/PerfectlySoft/Perfect-Net.git", from: "3.0.0")
 	], targets: [
-		.target(name: "PerfectHTTP", dependencies: ["PerfectLib", "PerfectNet"], path: "Sources"),
+		.target(name: "PerfectHTTP", dependencies: ["PerfectLib", "PerfectNet"]),
+		.testTarget(name: "PerfectHTTPTests", dependencies: ["PerfectHTTP"])
   ],
   swiftLanguageVersions: [3]
 )
