@@ -8,17 +8,23 @@
 import Foundation
 
 extension HTTPResponseStatus: Codable {
+	/// Codable support for HTTPResponseStatus
 	public init(from decoder: Decoder) throws {
 		self = HTTPResponseStatus.statusFrom(code: try Int(from: decoder))
 	}
+	/// Codable support for HTTPResponseStatus
 	public func encode(to encoder: Encoder) throws {
 		try code.encode(to: encoder)
 	}
 }
 
+/// A codable response type indicating an error.
 public struct HTTPResponseError: Error, Codable, CustomStringConvertible {
+	/// The HTTP status for the response.
 	public let status: HTTPResponseStatus
+	/// Textual description of the error.
 	public let description: String
+	/// Init with status and description.
 	public init(status s: HTTPResponseStatus,
 				description d: String) {
 		status = s
@@ -35,7 +41,9 @@ extension Data {
 
 private let lastObjectKey = "_last_object_"
 
+/// Extensions on HTTPRequest which permit the request body to be decoded to a Codable type.
 public extension HTTPRequest {
+	/// Decode the request body into the desired type, or throw and error.
 	func decode<A: Codable>() throws -> A {
 		guard let contentType = header(.contentType) else {
 			throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "This request requires a content-type header."))
@@ -124,8 +132,11 @@ protocol TypedRoutesProtocol {
 	var routes: Routes { get }
 }
 
+/// A typed intermediate route handler parameterized on the input and output types.
 public struct TRoutes<I, O>: TypedRoutesProtocol {
+	/// Input type alias
 	public typealias InputType = I
+	/// Output type alias
 	public typealias OutputType = O
 	let baseUri: String
 	let typedHandler: (InputType) throws -> OutputType
@@ -160,22 +171,26 @@ public struct TRoutes<I, O>: TypedRoutesProtocol {
 		typedHandler = t
 		children = c
 	}
+	/// Init with a base URI and handler.
 	public init(baseUri u: String,
 				handler t: @escaping (InputType) throws -> OutputType) {
 		baseUri = u
 		typedHandler = t
 		children = []
 	}
+	/// Add a typed route to this base URI.
 	@discardableResult
 	public mutating func add<N>(_ route: TRoute<OutputType, N>) -> TRoutes {
 		children.append(route)
 		return self
 	}
+	/// Add other intermediate routes to this base URI.
 	@discardableResult
 	public mutating func add<N>(_ route: TRoutes<OutputType, N>) -> TRoutes {
 		subRoutes.append(route)
 		return self
 	}
+	/// Add a route to this object. The new route will take the output of this route as its input.
 	@discardableResult
 	public mutating func add<N: Codable>(method m: HTTPMethod,
 										 uri u: String,
@@ -184,8 +199,11 @@ public struct TRoutes<I, O>: TypedRoutesProtocol {
 	}
 }
 
+/// A typed route handler.
 public struct TRoute<I, O: Codable>: TypedRouteProtocol {
+	/// Input type alias.
 	public typealias InputType = I
+	/// Output type alias.
 	public typealias OutputType = O
 	let methods: [HTTPMethod]
 	let uri: String
@@ -204,6 +222,7 @@ public struct TRoute<I, O: Codable>: TypedRouteProtocol {
 			}
 		}
 	}
+	/// Init with a method, uri, and handler.
 	public init(method m: HTTPMethod,
 				uri u: String,
 				handler t: @escaping (InputType) throws -> OutputType) {
@@ -211,6 +230,7 @@ public struct TRoute<I, O: Codable>: TypedRouteProtocol {
 		uri = u
 		typedHandler = t
 	}
+	/// Init with zero or more methods, a uri, and handler.
 	public init(methods m: [HTTPMethod] = [.get, .post],
 				uri u: String,
 				handler t: @escaping (InputType) throws -> OutputType) {
@@ -221,9 +241,11 @@ public struct TRoute<I, O: Codable>: TypedRouteProtocol {
 }
 
 public extension Routes {
+	/// Add routes to this object.
 	mutating func add<I, O>(_ route: TRoutes<I, O>) {
 		add(route.routes)
 	}
+	/// Add a route to this object.
 	mutating func add<I, O>(_ route: TRoute<I, O>) {
 		add(route.route)
 	}
