@@ -45,13 +45,7 @@ private let lastObjectKey = "_last_object_"
 public extension HTTPRequest {
 	/// Decode the request body into the desired type, or throw and error.
 	func decode<A: Codable>() throws -> A {
-		guard let contentType = header(.contentType) else {
-			throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "This request requires a content-type header."))
-		}
-		if contentType.hasPrefix("application/x-www-form-urlencoded") ||
-			contentType.hasPrefix("multipart/form-data") {
-			return try A.init(from: RequestDecoder(request: self))
-		} else if contentType.hasPrefix("application/json") {
+		if let contentType = header(.contentType), contentType.hasPrefix("application/json") {
 			guard let body = postBodyBytes else {
 				throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "This request requires JSON input."))
 			}
@@ -74,8 +68,9 @@ public extension HTTPRequest {
 				where error.localizedDescription == "The data couldn’t be read because it is missing." {
 				throw HTTPResponseError(status: .badRequest, description: "Error while decoding request object. This is usually caused by API misuse. Check your request input names.")
 			}
+		} else {
+			return try A.init(from: RequestDecoder(request: self))
 		}
-		throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Unsupported content-type: \(contentType)."))
 	}
 	func decode() throws -> Self {
 		return self
