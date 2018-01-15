@@ -3,7 +3,7 @@
 //  PerfectLib
 //
 //  Created by Kyle Jessup on 2016-06-17.
-//	Copyright (C) 2016 PerfectlySoft, Inc.
+//    Copyright (C) 2016 PerfectlySoft, Inc.
 //
 //===----------------------------------------------------------------------===//
 //
@@ -43,8 +43,8 @@ public enum HTTPRequestHeader {
             case .acceptEncoding: return "Accept-Encoding"
             case .acceptLanguage: return "Accept-Language"
             case .acceptDatetime: return "Accept-Datetime"
-			case .accessControlRequestMethod: return "Access-Control-Request-Method"
-			case .accessControlRequestHeaders: return "Access-Control-Request-Headers"
+            case .accessControlRequestMethod: return "Access-Control-Request-Method"
+            case .accessControlRequestHeaders: return "Access-Control-Request-Headers"
             case .authorization: return "Authorization"
             case .cacheControl: return "Cache-Control"
             case .connection: return "Connection"
@@ -74,8 +74,8 @@ public enum HTTPRequestHeader {
             case .via: return "Via"
             case .warning: return "Warning"
             case .xAuthorization: return "X-Authorization"
-			case .xRequestedWith: return "X-Requested-with"
-			case .xRequestedBy: return "X-Requested-by"
+            case .xRequestedWith: return "X-Requested-with"
+            case .xRequestedBy: return "X-Requested-by"
             case .dnt: return "DNT"
             case .xForwardedFor: return "X-Forwarded-For"
             case .xForwardedHost: return "X-Forwarded-Host"
@@ -161,9 +161,10 @@ public enum HTTPResponseHeader {
     
     public enum Name {
         case accessControlAllowOrigin
-		case accessControlAllowMethods
-		case accessControlAllowCredentials
-		case accessControlMaxAge
+        case accessControlAllowMethods
+        case accessControlAllowCredentials
+        case accessControlAllowHeaders
+        case accessControlMaxAge
         case acceptPatch
         case acceptRanges
         case age
@@ -224,9 +225,10 @@ public enum HTTPResponseHeader {
         public var standardName: String {
             switch self {
             case .accessControlAllowOrigin: return "Access-Control-Allow-Origin"
-			case .accessControlAllowMethods: return "Access-Control-Allow-Methods"
-			case .accessControlAllowCredentials: return "Access-Control-Allow-Credentials"
-			case .accessControlMaxAge: return "Access-Control-Max-Age"
+            case .accessControlAllowMethods: return "Access-Control-Allow-Methods"
+            case .accessControlAllowCredentials: return "Access-Control-Allow-Credentials"
+            case .accessControlAllowHeaders: return "Access-Control-Allow-Headers"
+            case .accessControlMaxAge: return "Access-Control-Max-Age"
             case .acceptPatch: return "Accept-Patch"
             case .acceptRanges: return "Accept-Ranges"
             case .age: return "Age"
@@ -285,9 +287,10 @@ public enum HTTPResponseHeader {
         public static func fromStandard(name: String) -> HTTPResponseHeader.Name {
             switch name.lowercased() {
             case "access-control-Allow-Origin": return .accessControlAllowOrigin
-			case "access-control-Allow-Methods": return .accessControlAllowMethods
-			case "access-control-Allow-Credentials": return .accessControlAllowCredentials
-			case "access-control-Max-Age": return .accessControlMaxAge
+            case "access-control-Allow-Methods": return .accessControlAllowMethods
+            case "access-control-Allow-Credentials": return .accessControlAllowCredentials
+            case "access-control-Allow-Headers": return .accessControlAllowHeaders
+            case "access-control-Max-Age": return .accessControlMaxAge
             case "accept-patch": return .acceptPatch
             case "accept-ranges": return .acceptRanges
             case "age": return .age
