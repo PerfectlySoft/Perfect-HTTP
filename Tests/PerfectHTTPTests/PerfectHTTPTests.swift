@@ -1,6 +1,7 @@
 import XCTest
 import PerfectNet
 import PerfectLib
+import Foundation
 @testable import PerfectHTTP
 
 #if os(Linux)
@@ -44,17 +45,53 @@ class ShimHTTPResponse: HTTPResponse {
 	var status: HTTPResponseStatus = .ok
 	var isStreaming = false
 	var bodyBytes = [UInt8]()
-	func header(_ named: HTTPResponseHeader.Name) -> String? { return nil }
-	func addHeader(_ named: HTTPResponseHeader.Name, value: String) -> Self { return self }
-	func setHeader(_ named: HTTPResponseHeader.Name, value: String) -> Self { return self }
-	var headers = AnyIterator<(HTTPResponseHeader.Name, String)> { return nil }
+	var headerStore = Array<(HTTPResponseHeader.Name, String)>()
+	func header(_ named: HTTPResponseHeader.Name) -> String? {
+		for (n, v) in headerStore where n == named {
+			return v
+		}
+		return nil
+	}
+	@discardableResult
+	func addHeader(_ name: HTTPResponseHeader.Name, value: String) -> Self {
+		headerStore.append((name, value))
+		return self
+	}
+	@discardableResult
+	func setHeader(_ name: HTTPResponseHeader.Name, value: String) -> Self {
+		var fi = [Int]()
+		for i in 0..<headerStore.count {
+			let (n, _) = headerStore[i]
+			if n == name {
+				fi.append(i)
+			}
+		}
+		fi = fi.reversed()
+		for i in fi {
+			headerStore.remove(at: i)
+		}
+		return addHeader(name, value: value)
+	}
+	var headers: AnyIterator<(HTTPResponseHeader.Name, String)> {
+		var g = self.headerStore.makeIterator()
+		return AnyIterator<(HTTPResponseHeader.Name, String)> {
+			g.next()
+		}
+	}
 	func addCookie(_: PerfectHTTP.HTTPCookie) -> Self { return self }
 	func appendBody(bytes: [UInt8]) {}
 	func appendBody(string: String) {}
 	func setBody(json: [String:Any]) throws {}
 	func push(callback: @escaping (Bool) -> ()) {}
 	func completed() {}
-	func next() {}
+	func next() {
+		if let f = handlers?.removeFirst() {
+			f(request, self)
+		}
+	}
+	
+	// shim shim
+	var handlers: [RequestHandler]?
 }
 
 class PerfectHTTPTests: XCTestCase {
@@ -499,6 +536,63 @@ class PerfectHTTPTests: XCTestCase {
 		} else {
 			XCTAssert(false, "Bad date format")
 		}
+	}
+	
+	func testTypedRoutes() {
+		struct SessionInfo: Codable {
+			//...could be an authentication token, etc.
+			let id: String
+		}
+		struct RequestResponse: Codable {
+			struct Address: Codable {
+				let street: String
+				let city: String
+				let province: String
+				let country: String
+				let postalCode: String
+			}
+			let fullName: String
+			let address: Address
+		}
+		// when handlers further down need the request you can pass it along. this is not nessesary though
+		typealias RequestSession = (request: HTTPRequest, session: SessionInfo)
+		
+		func checkSession(request: HTTPRequest) throws -> RequestSession {
+			// one would check the request to make sure it's authorized
+			let sessionInfo: SessionInfo = try request.decode() // will throw if request does not include id
+			return (request, sessionInfo)
+		}
+
+		func userInfo(session: RequestSession) throws -> RequestResponse {
+			// return the response for this request
+			return .init(fullName: "Justin Trudeau",
+						 address: .init(street: "111 Wellington St",
+										city: "Ottawa",
+										province: "Ontario",
+										country: "Canada",
+										postalCode: "K1A 0A6"))
+		}
+		
+		var routes = Routes() // root
+		var apiRoutes = TRoutes(baseUri: "/api", handler: checkSession)
+		apiRoutes.add(method: .get, uri: "/info/{id}", handler: userInfo)
+		routes.add(apiRoutes)
+		
+		// shim test
+		let request = ShimHTTPRequest()
+		let response = ShimHTTPResponse()
+		response.request = request
+		request.method = .get
+		
+		let handlers = routes.navigator.findHandlers(uri: "/api/info/abc123", webRequest: request)
+		XCTAssertNotNil(handlers)
+		XCTAssert(handlers?.count != 0)
+		response.handlers = handlers
+		response.next()
+		
+		XCTAssert(response.header(.contentType) == "application/json")
+		let decodeCheck = try? JSONDecoder().decode(RequestResponse.self, from: Data(bytes: response.bodyBytes))
+		XCTAssertNotNil(decodeCheck)
 	}
 	
 	func testMimeTypeComparison() {
