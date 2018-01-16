@@ -103,7 +103,8 @@ public struct TRoutes<I, O> {
 	/// Output type alias
 	public typealias OutputType = O
 	/// Init with a base URI and handler.
-	public init(baseUri u: String,
+	public init(
+		baseUri u: String,
 		handler t: @escaping (InputType) throws -> OutputType)
 	/// Add a typed route to this base URI.
 	@discardableResult
@@ -113,7 +114,8 @@ public struct TRoutes<I, O> {
 	public mutating func add<N>(_ route: TRoutes<OutputType, N>) -> TRoutes
 	/// Add a route to this object. The new route will take the output of this route as its input.
 	@discardableResult
-	public mutating func add<N: Codable>(method m: HTTPMethod,
+	public mutating func add<N: Codable>(
+		method m: HTTPMethod,
 		uri u: String,
 		handler t: @escaping (OutputType) throws -> N) -> TRoutes
 }
@@ -129,7 +131,8 @@ public struct TRoute<I, O: Codable> {
 		uri u: String,
 		handler t: @escaping (InputType) throws -> OutputType)
 	/// Init with zero or more methods, a uri, and handler.
-	public init(methods m: [HTTPMethod] = [.get, .post],
+	public init(
+		methods m: [HTTPMethod] = [.get, .post],
 		uri u: String,
 		handler t: @escaping (InputType) throws -> OutputType)
 }
@@ -173,7 +176,8 @@ public struct HTTPResponseError: Error, Codable, CustomStringConvertible {
 	/// Textual description of the error.
 	public let description: String
 	/// Init with status and description.
-	public init(status s: HTTPResponseStatus,
+	public init(
+		status s: HTTPResponseStatus,
 		description d: String)
 }
 ```
@@ -227,7 +231,8 @@ func checkSession(request: HTTPRequest) throws -> RequestSession {
 func userInfo(session: RequestSession) throws -> RequestResponse {
 	// return the response for this request
 	return .init(fullName: "Justin Trudeau",
-		address: .init(street: "111 Wellington St",
+		address: .init(
+			street: "111 Wellington St",
 			city: "Ottawa",
 			province: "Ontario",
 			country: "Canada",
