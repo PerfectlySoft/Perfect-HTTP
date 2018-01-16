@@ -189,7 +189,7 @@ public struct TRoutes<I, O>: TypedRoutesProtocol {
 	@discardableResult
 	public mutating func add<N: Codable>(method m: HTTPMethod,
 										 uri u: String,
-										 handler t: @escaping (O) throws -> N) -> TRoutes {
+										 handler t: @escaping (OutputType) throws -> N) -> TRoutes {
 		return add(TRoute(method: m, uri: u, handler: t))
 	}
 }
