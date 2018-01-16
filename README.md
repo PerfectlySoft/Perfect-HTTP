@@ -66,7 +66,7 @@ routes.add(method: .get, uri: "/") {
 The handler can be a separate function which takes an HTTPRequest, an HTTPResponse and either completes the response or hands off to a function which does.
 
 ``` swift
-public func helloWorld(_ request: HTTPRequest, response: HTTPResponse) {
+func helloWorld(request: HTTPRequest, response: HTTPResponse) {
 	response.appendBody(string: "<html><title>Hello, world!</title><body>Hello, world!</body></html>")
 		.completed()
 }
@@ -81,7 +81,7 @@ try HTTPServer.launch(name: "my.server.ca", port: port, routes: routes)
 
 Routes can not be added or modified after a server has started listening for requests.
 
-Inside your handler function, the HTTPRequest object provides access to all client request information. This includes all  client headers, query parameters, POST body data and other relevant information such as the client IP address and URL variables.
+Inside your handler function the HTTPRequest object provides access to all client request information. This includes all  client headers, query parameters, POST body data and other relevant information such as the client IP address and URL variables.
 
 HTTPRequest will handle parsing and decoding all "application/x-www-form-urlencoded" as well as "multipart/form-data" content type requests. It will make the data for any other content types available in a raw, unparsed form. When handling multipart form data, HTTPRequest will automatically decode the data and create temporary files for any file uploads contained therein. These files will exist until the request ends after which they will be automatically deleted.
 
@@ -127,7 +127,8 @@ public struct TRoute<I, O: Codable> {
 	/// Output type alias.
 	public typealias OutputType = O
 	// Init with a method, uri, and handler.
-	public init(method m: HTTPMethod,
+	public init(
+		method m: HTTPMethod,
 		uri u: String,
 		handler t: @escaping (InputType) throws -> OutputType)
 	/// Init with zero or more methods, a uri, and handler.
