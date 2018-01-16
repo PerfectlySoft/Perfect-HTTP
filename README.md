@@ -104,7 +104,7 @@ public struct TRoutes<I, O> {
 	public typealias OutputType = O
 	/// Init with a base URI and handler.
 	public init(baseUri u: String,
-				handler t: @escaping (InputType) throws -> OutputType)
+		handler t: @escaping (InputType) throws -> OutputType)
 	/// Add a typed route to this base URI.
 	@discardableResult
 	public mutating func add<N>(_ route: TRoute<OutputType, N>) -> TRoutes
@@ -114,8 +114,8 @@ public struct TRoutes<I, O> {
 	/// Add a route to this object. The new route will take the output of this route as its input.
 	@discardableResult
 	public mutating func add<N: Codable>(method m: HTTPMethod,
-										 uri u: String,
-										 handler t: @escaping (OutputType) throws -> N) -> TRoutes
+		uri u: String,
+		handler t: @escaping (OutputType) throws -> N) -> TRoutes
 }
 
 /// A typed route handler.
@@ -126,12 +126,12 @@ public struct TRoute<I, O: Codable> {
 	public typealias OutputType = O
 	// Init with a method, uri, and handler.
 	public init(method m: HTTPMethod,
-				uri u: String,
-				handler t: @escaping (InputType) throws -> OutputType)
+		uri u: String,
+		handler t: @escaping (InputType) throws -> OutputType)
 	/// Init with zero or more methods, a uri, and handler.
 	public init(methods m: [HTTPMethod] = [.get, .post],
-				uri u: String,
-				handler t: @escaping (InputType) throws -> OutputType)
+		uri u: String,
+		handler t: @escaping (InputType) throws -> OutputType)
 }
 ```
 
@@ -174,7 +174,7 @@ public struct HTTPResponseError: Error, Codable, CustomStringConvertible {
 	public let description: String
 	/// Init with status and description.
 	public init(status s: HTTPResponseStatus,
-				description d: String)
+		description d: String)
 }
 ```
 
@@ -227,11 +227,11 @@ func checkSession(request: HTTPRequest) throws -> RequestSession {
 func userInfo(session: RequestSession) throws -> RequestResponse {
 	// return the response for this request
 	return .init(fullName: "Justin Trudeau",
-				 address: .init(street: "111 Wellington St",
-								city: "Ottawa",
-								province: "Ontario",
-								country: "Canada",
-								postalCode: "K1A 0A6"))
+		address: .init(street: "111 Wellington St",
+			city: "Ottawa",
+			province: "Ontario",
+			country: "Canada",
+			postalCode: "K1A 0A6"))
 }
 // root Routes object holding all other routes for this server
 var routes = Routes()
