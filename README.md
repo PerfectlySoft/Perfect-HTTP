@@ -252,5 +252,12 @@ routes.add(apiRoutes)
 try HTTPServer.launch(name: "my.server.ca", port: port, routes: routes)
 ```
 
+## More Information
 
+The following documents contain pertinent information:
 
+[Configuring and Launching HTTPServer](https://www.perfect.org/docs/HTTPServer.html)
+
+[Routing](https://www.perfect.org/docs/routing.html)
+
+[All Perfect Docs](https://www.perfect.org/docs/)
