@@ -394,7 +394,7 @@ public extension HTTPResponse {
 	/// Set the status and call completed()
 	func completed(status: HTTPResponseStatus) {
 		self.status = status
-		self.completed()
+		completed()
 	}
 }
 
