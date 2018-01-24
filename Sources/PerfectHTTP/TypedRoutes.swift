@@ -97,11 +97,15 @@ private extension HTTPResponse {
 				let responseError = HTTPResponseError(status: .internalServerError, description: error.description)
 				try encode(responseError).completed(status: .internalServerError)
 			default:
-				setBody(string: error.localizedDescription)
+				let desc = Array(error.localizedDescription.utf8)
+				setBody(bytes: desc)
+					.setHeader(.contentLength, value: "\(desc.count)")
 					.completed(status: .internalServerError)
 			}
 		} catch _ {
-			setBody(string: "\(error)")
+			let desc = Array("\(error)".utf8)
+			setBody(bytes: desc)
+				.setHeader(.contentLength, value: "\(desc.count)")
 				.completed(status: .internalServerError)
 		}
 	}
@@ -109,6 +113,7 @@ private extension HTTPResponse {
 		let tryJson = try JSONEncoder().encode(t).uint8Array
 		setBody(bytes: tryJson)
 			.setHeader(.contentType, value: MimeType(type: .application, subType: "json").longType)
+			.setHeader(.contentLength, value: "\(tryJson.count)")
 		return self
 	}
 }
