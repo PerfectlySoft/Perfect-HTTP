@@ -312,21 +312,18 @@ class RequestReader<K : CodingKey>: KeyedDecodingContainerProtocol {
 		params = p.request.params()
 		uploads = p.request.postFileUploads
 	}
-	func getValue(_ key: Key) throws -> String {
+	func getValue<T: LosslessStringConvertible>(_ key: Key) throws -> T {
+		let str: String
 		let keyStr = key.stringValue
 		if let v = request.urlVariables[keyStr] {
-			return v
+			str = v
+		} else if let files = uploads, let found = files.first(where: {$0.fieldName == keyStr}) {
+			str = found.fieldValue
+		} else if let v = params.first(where: {$0.0 == keyStr}) {
+			str = v.1
+		} else {
+			throw DecodingError.keyNotFound(key, .init(codingPath: codingPath, debugDescription: "Key \(keyStr) not found."))
 		}
-		if let files = uploads, let found = files.first(where: {$0.fieldName == keyStr}) {
-			return found.fieldValue
-		}
-		if let v = params.first(where: {$0.0 == keyStr}) {
-			return v.1
-		}
-		throw DecodingError.keyNotFound(key, .init(codingPath: codingPath, debugDescription: "Key \(keyStr) not found."))
-	}
-	func getValue<T: LosslessStringConvertible>(_ key: Key) throws -> T {
-		let str: String = try getValue(key)
 		guard let ret = T.init(str) else {
 			throw DecodingError.dataCorruptedError(forKey: key, in: self, debugDescription: "Could not convert to \(T.self).")
 		}
