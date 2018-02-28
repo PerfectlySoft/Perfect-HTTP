@@ -337,7 +337,6 @@ class RouteNode {
 	func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> [RouteMap.RequestHandler?]? {
 		var m = generator
 		if let p = m.next() {
-			
 			// variables
 			for node in self.variables {
 				if let h = node.findHandler(currentComponent: p, generator: m, webRequest: webRequest) {
@@ -391,7 +390,7 @@ class RouteNode {
 
 	func getNode(_ ing: ComponentGenerator) throws -> RouteNode {
 		var g = ing
-		if let comp = g.next() {
+		if let comp = g.next(), comp != "/" {
 			let routeType = RouteItemType(comp)
 			let node: RouteNode
 			switch routeType {
