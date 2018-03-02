@@ -539,6 +539,9 @@ class PerfectHTTPTests: XCTestCase {
 	}
 	
 	func testTypedRoutes() {
+		enum Province: Int, Codable {
+			case ontario
+		}
 		struct SessionInfo: Codable {
 			//...could be an authentication token, etc.
 			let id: String
@@ -547,7 +550,7 @@ class PerfectHTTPTests: XCTestCase {
 			struct Address: Codable {
 				let street: String
 				let city: String
-				let province: String
+				let province: Province
 				let country: String
 				let postalCode: String
 			}
@@ -568,7 +571,7 @@ class PerfectHTTPTests: XCTestCase {
 			return .init(fullName: "Justin Trudeau",
 						 address: .init(street: "111 Wellington St",
 										city: "Ottawa",
-										province: "Ontario",
+										province: .ontario,
 										country: "Canada",
 										postalCode: "K1A 0A6"))
 		}
