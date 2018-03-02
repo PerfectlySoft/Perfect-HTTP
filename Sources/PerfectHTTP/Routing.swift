@@ -90,7 +90,7 @@ public struct Routes {
 	
 	/// Initialize with a baseUri.
 	public init(baseUri: String, handler: RequestHandler? = nil) {
-		self.baseUri = Routes.sanitizeUri(baseUri)
+		self.baseUri = Routes.sanitizeBaseUri(baseUri)
 		self.handler = handler
 	}
 	
@@ -103,7 +103,7 @@ public struct Routes {
 	
 	/// Initialize with a baseUri and array of Route.
 	public init(baseUri: String, routes: [Route]) {
-		self.baseUri = Routes.sanitizeUri(baseUri)
+		self.baseUri = Routes.sanitizeBaseUri(baseUri)
 		self.handler = nil
 		add(routes)
 	}
@@ -152,7 +152,13 @@ public struct Routes {
 		}
 	}
 	
-	static func sanitizeUri(_ uri: String) -> String {
+	static func sanitizeBaseUri(_ uri: String) -> String {
+		let split = uri.split(separator: "/").map(String.init)
+		let ret = "/" + split.joined(separator: "/")
+		return ret
+	}
+	
+	static func sanitizeFragmentUri(_ uri: String) -> String {
 		let endSlash = uri.hasSuffix("/")
 		let split = uri.split(separator: "/").map(String.init)
 		let ret = "/" + split.joined(separator: "/") + (endSlash ? "/" : "")
@@ -208,7 +214,7 @@ extension Routes {
 			let root = RouteNode()
 			working[method] = root
 			for path in uris {
-				let uri = Routes.sanitizeUri(path.path)
+				let uri = Routes.sanitizeFragmentUri(path.path)
 				let handler = path.handler
 				let terminal = path.terminal
 				var gen = uri.routePathComponents.makeIterator()
@@ -390,7 +396,7 @@ class RouteNode {
 
 	func getNode(_ ing: ComponentGenerator) throws -> RouteNode {
 		var g = ing
-		if let comp = g.next(), comp != "/" {
+		if let comp = g.next() {
 			let routeType = RouteItemType(comp)
 			let node: RouteNode
 			switch routeType {

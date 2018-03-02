@@ -574,8 +574,8 @@ class PerfectHTTPTests: XCTestCase {
 		}
 		
 		var routes = Routes() // root
-		var apiRoutes = TRoutes(baseUri: "/api", handler: checkSession)
-		apiRoutes.add(method: .get, uri: "/info/{id}", handler: userInfo)
+		var apiRoutes = TRoutes(baseUri: "/api/", handler: checkSession)
+		apiRoutes.add(method: .get, uri: "info/{id}", handler: userInfo)
 		routes.add(apiRoutes)
 		
 		// shim test
