@@ -87,8 +87,8 @@ public extension HTTPRequest {
 	}
 }
 
-private extension HTTPResponse {
-	func handleError(error: Error) {
+extension HTTPResponse {
+	public func handleError(error: Error) {
 		do {
 			switch error {
 			case let error as HTTPResponseError:
