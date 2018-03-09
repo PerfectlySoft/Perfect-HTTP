@@ -538,36 +538,35 @@ class PerfectHTTPTests: XCTestCase {
 		}
 	}
 	
+	enum Province: Int, Codable {
+		case ontario
+	}
+	struct SessionInfo: Codable {
+		//...could be an authentication token, etc.
+		let id: String
+	}
+	struct RequestResponse: Codable {
+		struct Address: Codable {
+			let street: String
+			let city: String
+			let province: Province
+			let country: String
+			let postalCode: String
+		}
+		let fullName: String
+		let address: Address
+	}
+	
 	func testTypedRoutes() {
-		enum Province: Int, Codable {
-			case ontario
-		}
-		struct SessionInfo: Codable {
-			//...could be an authentication token, etc.
-			let id: String
-		}
-		struct RequestResponse: Codable {
-			struct Address: Codable {
-				let street: String
-				let city: String
-				let province: Province
-				let country: String
-				let postalCode: String
-			}
-			let fullName: String
-			let address: Address
-		}
 		// when handlers further down need the request you can pass it along. this is not nessesary though
 		typealias RequestSession = (request: HTTPRequest, session: SessionInfo)
-		
 		func checkSession(request: HTTPRequest) throws -> RequestSession {
 			// one would check the request to make sure it's authorized
 			let sessionInfo: SessionInfo = try request.decode() // will throw if request does not include id
 			return (request, sessionInfo)
 		}
-
-		func userInfo(session: RequestSession) throws -> RequestResponse {
-			// return the response for this request
+		
+		func replyCodable(_ session: RequestSession) throws -> RequestResponse {
 			return .init(fullName: "Justin Trudeau",
 						 address: .init(street: "111 Wellington St",
 										city: "Ottawa",
@@ -575,27 +574,74 @@ class PerfectHTTPTests: XCTestCase {
 										country: "Canada",
 										postalCode: "K1A 0A6"))
 		}
-		
+		func replyVoid(session: RequestSession) throws {}
+		func replyContent(session: RequestSession) throws -> HTTPResponseContent<RequestResponse> {
+			return .init(body: try replyCodable(session),
+						 finalFilter: { r in r.setHeader(.contentType, value: "foo/bar") ; return })
+		}
+		func replyNoContent(session: RequestSession) throws -> HTTPResponseNoContent {
+			return .init(responseHeaders: [(.contentType, "foo/bar")])
+		}
 		var routes = Routes() // root
 		var apiRoutes = TRoutes(baseUri: "/api/", handler: checkSession)
-		apiRoutes.add(method: .get, uri: "info/{id}", handler: userInfo)
+		apiRoutes.add(method: .get, uri: "info1/{id}", handler: replyCodable)
+		apiRoutes.add(method: .get, uri: "info2/{id}", handler: replyVoid)
+		apiRoutes.add(method: .get, uri: "info3/{id}", handler: replyContent)
+		apiRoutes.add(method: .get, uri: "info4/{id}", handler: replyNoContent)
 		routes.add(apiRoutes)
-		
-		// shim test
-		let request = ShimHTTPRequest()
-		let response = ShimHTTPResponse()
-		response.request = request
-		request.method = .get
-		
-		let handlers = routes.navigator.findHandlers(uri: "/api/info/abc123", webRequest: request)
-		XCTAssertNotNil(handlers)
-		XCTAssert(handlers?.count != 0)
-		response.handlers = handlers
-		response.next()
-		
-		XCTAssert(response.header(.contentType) == "application/json")
-		let decodeCheck = try? JSONDecoder().decode(RequestResponse.self, from: Data(bytes: response.bodyBytes))
-		XCTAssertNotNil(decodeCheck)
+		do {
+			let request = ShimHTTPRequest()
+			let response = ShimHTTPResponse()
+			response.request = request
+			request.method = .get
+			let handlers = routes.navigator.findHandlers(uri: "/api/info1/abc123", webRequest: request)
+			XCTAssertNotNil(handlers)
+			XCTAssertNotEqual(handlers?.count, 0)
+			response.handlers = handlers
+			response.next()
+			XCTAssertEqual(response.header(.contentType), "application/json")
+			let decodeCheck = try? JSONDecoder().decode(RequestResponse.self, from: Data(bytes: response.bodyBytes))
+			XCTAssertNotNil(decodeCheck)
+		}
+		do {
+			let request = ShimHTTPRequest()
+			let response = ShimHTTPResponse()
+			response.request = request
+			request.method = .get
+			let handlers = routes.navigator.findHandlers(uri: "/api/info2/abc123", webRequest: request)
+			XCTAssertNotNil(handlers)
+			XCTAssertNotEqual(handlers?.count, 0)
+			response.handlers = handlers
+			response.next()
+			XCTAssertEqual(response.bodyBytes.count, 0)
+		}
+		do {
+			let request = ShimHTTPRequest()
+			let response = ShimHTTPResponse()
+			response.request = request
+			request.method = .get
+			let handlers = routes.navigator.findHandlers(uri: "/api/info3/abc123", webRequest: request)
+			XCTAssertNotNil(handlers)
+			XCTAssertNotEqual(handlers?.count, 0)
+			response.handlers = handlers
+			response.next()
+			XCTAssertEqual(response.header(.contentType), "foo/bar")
+			let decodeCheck = try? JSONDecoder().decode(RequestResponse.self, from: Data(bytes: response.bodyBytes))
+			XCTAssertNotNil(decodeCheck)
+		}
+		do {
+			let request = ShimHTTPRequest()
+			let response = ShimHTTPResponse()
+			response.request = request
+			request.method = .get
+			let handlers = routes.navigator.findHandlers(uri: "/api/info4/abc123", webRequest: request)
+			XCTAssertNotNil(handlers)
+			XCTAssertNotEqual(handlers?.count, 0)
+			response.handlers = handlers
+			response.next()
+			XCTAssertEqual(response.bodyBytes.count, 0)
+			XCTAssertEqual(response.header(.contentType), "foo/bar")
+		}
 	}
 	
 	func testMimeTypeComparison() {
@@ -657,7 +703,8 @@ class PerfectHTTPTests: XCTestCase {
 			("testRoutingTrailingSlash1", testRoutingTrailingSlash1),
 			("testRoutingTrailingSlash2", testRoutingTrailingSlash2),
 			("testRoutingTrailingSlash3", testRoutingTrailingSlash3),
-			("testRoutingTrailingSlash4", testRoutingTrailingSlash4)
+			("testRoutingTrailingSlash4", testRoutingTrailingSlash4),
+			("testTypedRoutes", testTypedRoutes)
         ]
     }
 }

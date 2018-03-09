@@ -32,10 +32,51 @@ public struct HTTPResponseError: Error, Codable, CustomStringConvertible {
 	}
 }
 
-// I put this here because it seems inefficient and I hope to adjust it
-extension Data {
-	var uint8Array: [UInt8] {
-		return map{$0}
+public protocol HTTPResponseContentProvider {
+	func provide(response: HTTPResponse) throws -> HTTPResponse
+}
+
+/// Return content which has a chance to modify the response, set status or add headers.
+public struct HTTPResponseContent<BodyType: Codable>: HTTPResponseContentProvider {
+	public let status: HTTPResponseStatus
+	public let responseHeaders: [(HTTPResponseHeader.Name, String)]
+	public let body: BodyType
+	public let finalFilter: ((HTTPResponse) -> ())?
+	public init(status: HTTPResponseStatus = .ok,
+				responseHeaders: [(HTTPResponseHeader.Name, String)] = [],
+				body: BodyType,
+				finalFilter: ((HTTPResponse) -> ())? = nil) {
+		self.status = status
+		self.responseHeaders = responseHeaders
+		self.body = body
+		self.finalFilter = finalFilter
+	}
+	public func provide(response: HTTPResponse) throws -> HTTPResponse {
+		response.status = status
+		try response.encode(body)
+		responseHeaders.forEach { response.setHeader($0.0, value: $0.1) }
+		finalFilter?(response)
+		return response
+	}
+}
+
+/// Return no content with a chance to modify the response, set status or add headers.
+public struct HTTPResponseNoContent: HTTPResponseContentProvider {
+	public let status: HTTPResponseStatus
+	public let responseHeaders: [(HTTPResponseHeader.Name, String)]
+	public let finalFilter: ((HTTPResponse) -> ())?
+	public init(status: HTTPResponseStatus = .ok,
+				responseHeaders: [(HTTPResponseHeader.Name, String)] = [],
+				finalFilter: ((HTTPResponse) -> ())? = nil) {
+		self.status = status
+		self.responseHeaders = responseHeaders
+		self.finalFilter = finalFilter
+	}
+	public func provide(response: HTTPResponse) throws -> HTTPResponse {
+		response.status = status
+		responseHeaders.forEach { response.setHeader($0.0, value: $0.1) }
+		finalFilter?(response)
+		return response
 	}
 }
 
@@ -43,7 +84,7 @@ private let lastObjectKey = "_last_object_"
 
 /// Extensions on HTTPRequest which permit the request body to be decoded to a Codable type.
 public extension HTTPRequest {
-	/// Decode the request body into the desired type, or throw and error.
+	/// Decode the request body into the desired type, or throw an error.
 	func decode<A: Codable>() throws -> A {
 		if let contentType = header(.contentType), contentType.hasPrefix("application/json") {
 			guard let body = postBodyBytes else {
@@ -109,9 +150,10 @@ extension HTTPResponse {
 				.completed(status: .internalServerError)
 		}
 	}
+	@discardableResult
 	func encode<A: Encodable>(_ t: A) throws -> Self {
-		let tryJson = try JSONEncoder().encode(t).uint8Array
-		setBody(bytes: tryJson)
+		let tryJson = try JSONEncoder().encode(t)
+		setBody(bytes: Array(tryJson))
 			.setHeader(.contentType, value: MimeType(type: .application, subType: "json").longType)
 			.setHeader(.contentLength, value: "\(tryJson.count)")
 		return self
@@ -180,7 +222,7 @@ public struct TRoutes<I, O>: TypedRoutesProtocol {
 	}
 	/// Add a typed route to this base URI.
 	@discardableResult
-	public mutating func add<N>(_ route: TRoute<OutputType, N>) -> TRoutes {
+	public mutating func add(_ route: TRoute<OutputType>) -> TRoutes {
 		children.append(route)
 		return self
 	}
@@ -190,24 +232,15 @@ public struct TRoutes<I, O>: TypedRoutesProtocol {
 		subRoutes.append(route)
 		return self
 	}
-	/// Add a route to this object. The new route will take the output of this route as its input.
-	@discardableResult
-	public mutating func add<N: Codable>(method m: HTTPMethod,
-										 uri u: String,
-										 handler t: @escaping (OutputType) throws -> N) -> TRoutes {
-		return add(TRoute(method: m, uri: u, handler: t))
-	}
 }
 
 /// A typed route handler.
-public struct TRoute<I, O: Codable>: TypedRouteProtocol {
+public struct TRoute<I>: TypedRouteProtocol {
 	/// Input type alias.
 	public typealias InputType = I
-	/// Output type alias.
-	public typealias OutputType = O
 	let methods: [HTTPMethod]
 	let uri: String
-	let typedHandler: (InputType) throws -> OutputType
+	let typedHandler: (InputType) throws -> HTTPResponseContentProvider
 	var route: Route {
 		return .init(methods: methods, uri: uri, handler: handler)
 	}
@@ -216,27 +249,82 @@ public struct TRoute<I, O: Codable>: TypedRouteProtocol {
 			req, resp in
 			do {
 				let input: InputType = try req.getInput()
-				try resp.encode(try self.typedHandler(input)).completed(status: .ok)
+				try self.typedHandler(input).provide(response: resp).completed()
 			} catch {
 				resp.handleError(error: error)
 			}
 		}
 	}
 	/// Init with a method, uri, and handler.
+	public init<OutputType: Codable>(method m: HTTPMethod,
+									 uri u: String,
+									 handler t: @escaping (InputType) throws -> OutputType) {
+		self.init(methods: [m], uri: u, handler: t)
+	}
+	/// Init with zero or more methods, a uri, and handler.
+	public init<OutputType: Codable>(methods m: [HTTPMethod] = [.get, .post],
+									 uri u: String,
+									 handler t: @escaping (InputType) throws -> OutputType) {
+		methods = m
+		uri = u
+		typedHandler = {
+			return HTTPResponseContent<OutputType>(body: try t($0))
+		}
+	}
+	/// Init with a method, uri, and handler.
 	public init(method m: HTTPMethod,
 				uri u: String,
-				handler t: @escaping (InputType) throws -> OutputType) {
-		methods = [m]
-		uri = u
-		typedHandler = t
+				handler t: @escaping (InputType) throws -> ()) {
+		self.init(methods: [m], uri: u, handler: t)
 	}
 	/// Init with zero or more methods, a uri, and handler.
 	public init(methods m: [HTTPMethod] = [.get, .post],
-				uri u: String,
-				handler t: @escaping (InputType) throws -> OutputType) {
+									 uri u: String,
+									 handler t: @escaping (InputType) throws -> ()) {
+		methods = m
+		uri = u
+		typedHandler = {
+			try t($0)
+			return HTTPResponseNoContent()
+		}
+	}
+	/// Init with a method, uri, and handler.
+	public init<P: HTTPResponseContentProvider>(method m: HTTPMethod,
+												uri u: String,
+												handler t: @escaping (InputType) throws -> P) {
+		self.init(methods: [m], uri: u, handler: t)
+	}
+	/// Init with zero or more methods, a uri, and handler.
+	public init<P: HTTPResponseContentProvider>(methods m: [HTTPMethod] = [.get, .post],
+												uri u: String,
+												handler t: @escaping (InputType) throws -> P) {
 		methods = m
 		uri = u
 		typedHandler = t
+	}
+}
+
+public extension TRoutes {
+	/// Add a route to this object. The new route will take the output of this route as its input.
+	@discardableResult
+	public mutating func add<N: Codable>(method m: HTTPMethod,
+										 uri u: String,
+										 handler t: @escaping (OutputType) throws -> N) -> TRoutes {
+		return add(TRoute(method: m, uri: u, handler: t))
+	}
+	/// Add a route to this object. The new route will take the output of this route as its input.
+	@discardableResult
+	public mutating func add(method m: HTTPMethod,
+										 uri u: String,
+										 handler t: @escaping (OutputType) throws -> ()) -> TRoutes {
+		return add(TRoute(method: m, uri: u, handler: t))
+	}
+	/// Add a route to this object. The new route will take the output of this route as its input.
+	@discardableResult
+	public mutating func add<P: HTTPResponseContentProvider>(method m: HTTPMethod,
+										 uri u: String,
+										 handler t: @escaping (OutputType) throws -> P) -> TRoutes {
+		return add(TRoute(method: m, uri: u, handler: t))
 	}
 }
 
@@ -246,7 +334,7 @@ public extension Routes {
 		add(route.routes)
 	}
 	/// Add a route to this object.
-	mutating func add<I, O>(_ route: TRoute<I, O>) {
+	mutating func add<I>(_ route: TRoute<I>) {
 		add(route.route)
 	}
 }
@@ -436,52 +524,42 @@ class RequestUnkeyedReader: UnkeyedDecodingContainer, SingleValueDecodingContain
 	func decodeNil() -> Bool {
 		return false
 	}
-	
 	func decode(_ type: Bool.Type) throws -> Bool {
 		advance(type)
 		return false
 	}
-	
 	func decode(_ type: Int.Type) throws -> Int {
 		advance(type)
 		return 0
 	}
-	
 	func decode(_ type: Int8.Type) throws -> Int8 {
 		advance(type)
 		return 0
 	}
-	
 	func decode(_ type: Int16.Type) throws -> Int16 {
 		advance(type)
 		return 0
 	}
-	
 	func decode(_ type: Int32.Type) throws -> Int32 {
 		advance(type)
 		return 0
 	}
-	
 	func decode(_ type: Int64.Type) throws -> Int64 {
 		advance(type)
 		return 0
 	}
-	
 	func decode(_ type: UInt.Type) throws -> UInt {
 		advance(type)
 		return 0
 	}
-	
 	func decode(_ type: UInt8.Type) throws -> UInt8 {
 		advance(type)
 		return 0
 	}
-	
 	func decode(_ type: UInt16.Type) throws -> UInt16 {
 		advance(type)
 		return 0
 	}
-	
 	func decode(_ type: UInt32.Type) throws -> UInt32 {
 		advance(type)
 		return 0
