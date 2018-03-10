@@ -19,7 +19,7 @@ extension HTTPResponseStatus: Codable {
 }
 
 /// A codable response type indicating an error.
-public struct HTTPResponseError: Error, Codable, CustomStringConvertible {
+public struct HTTPResponseError: Error, Codable {
 	/// The HTTP status for the response.
 	public let status: HTTPResponseStatus
 	/// Textual description of the error.
@@ -84,6 +84,10 @@ private let lastObjectKey = "_last_object_"
 
 /// Extensions on HTTPRequest which permit the request body to be decoded to a Codable type.
 public extension HTTPRequest {
+	/// Decode the request body into the desired type, or throw an error.
+	func decode<A: Codable>(_ type: A.Type) throws -> A {
+		return try decode()
+	}
 	/// Decode the request body into the desired type, or throw an error.
 	func decode<A: Codable>() throws -> A {
 		if let contentType = header(.contentType), contentType.hasPrefix("application/json") {

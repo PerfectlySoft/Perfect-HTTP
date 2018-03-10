@@ -562,7 +562,7 @@ class PerfectHTTPTests: XCTestCase {
 		typealias RequestSession = (request: HTTPRequest, session: SessionInfo)
 		func checkSession(request: HTTPRequest) throws -> RequestSession {
 			// one would check the request to make sure it's authorized
-			let sessionInfo: SessionInfo = try request.decode() // will throw if request does not include id
+			let sessionInfo = try request.decode(SessionInfo.self) // will throw if request does not include id
 			return (request, sessionInfo)
 		}
 		
