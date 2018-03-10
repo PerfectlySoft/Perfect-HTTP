@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PerfectThread
 
 extension HTTPResponseStatus: Codable {
 	/// Codable support for HTTPResponseStatus
@@ -244,28 +245,34 @@ public struct TRoute<I>: TypedRouteProtocol {
 	public typealias InputType = I
 	let methods: [HTTPMethod]
 	let uri: String
-	let typedHandler: (InputType) throws -> HTTPResponseContentProvider
+	let typedHandler: ((InputType) throws -> HTTPResponseContentProvider)?
+	let promiseHandler: RequestHandler?
 	var route: Route {
 		return .init(methods: methods, uri: uri, handler: handler)
 	}
 	var handler: RequestHandler {
+		if let h = promiseHandler {
+			return h
+		}
 		return {
 			req, resp in
 			do {
 				let input: InputType = try req.getInput()
-				try self.typedHandler(input).provide(response: resp).completed()
+				try self.typedHandler?(input).provide(response: resp).completed()
 			} catch {
 				resp.handleError(error: error)
 			}
 		}
 	}
 	/// Init with a method, uri, and handler.
+	/// Handler returning a Codable which will be JSON encoded.
 	public init<OutputType: Codable>(method m: HTTPMethod,
 									 uri u: String,
 									 handler t: @escaping (InputType) throws -> OutputType) {
 		self.init(methods: [m], uri: u, handler: t)
 	}
 	/// Init with zero or more methods, a uri, and handler.
+	/// Handler returning a Codable which will be JSON encoded.
 	public init<OutputType: Codable>(methods m: [HTTPMethod] = [.get, .post],
 									 uri u: String,
 									 handler t: @escaping (InputType) throws -> OutputType) {
@@ -274,14 +281,17 @@ public struct TRoute<I>: TypedRouteProtocol {
 		typedHandler = {
 			return HTTPResponseContent<OutputType>(body: try t($0))
 		}
+		promiseHandler = nil
 	}
 	/// Init with a method, uri, and handler.
+	/// Handler returning no content.
 	public init(method m: HTTPMethod,
 				uri u: String,
 				handler t: @escaping (InputType) throws -> ()) {
 		self.init(methods: [m], uri: u, handler: t)
 	}
 	/// Init with zero or more methods, a uri, and handler.
+	/// Handler returning no content.
 	public init(methods m: [HTTPMethod] = [.get, .post],
 									 uri u: String,
 									 handler t: @escaping (InputType) throws -> ()) {
@@ -291,20 +301,54 @@ public struct TRoute<I>: TypedRouteProtocol {
 			try t($0)
 			return HTTPResponseNoContent()
 		}
+		promiseHandler = nil
 	}
 	/// Init with a method, uri, and handler.
+	// Handler returning HTTPResponseContentProvider.
 	public init<P: HTTPResponseContentProvider>(method m: HTTPMethod,
 												uri u: String,
 												handler t: @escaping (InputType) throws -> P) {
 		self.init(methods: [m], uri: u, handler: t)
 	}
 	/// Init with zero or more methods, a uri, and handler.
+	/// Handler returning HTTPResponseContentProvider.
 	public init<P: HTTPResponseContentProvider>(methods m: [HTTPMethod] = [.get, .post],
 												uri u: String,
 												handler t: @escaping (InputType) throws -> P) {
 		methods = m
 		uri = u
 		typedHandler = t
+		promiseHandler = nil
+	}
+	/// Init with a method, uri, and handler.
+	// Handler returning Promise<HTTPResponseContentProvider>.
+	public init<C: HTTPResponseContentProvider>(method m: HTTPMethod,
+				uri u: String,
+				handler t: @escaping (InputType, Promise<C>) -> ()) {
+		self.init(methods: [m], uri: u, handler: t)
+	}
+	/// Init with zero or more methods, a uri, and handler.
+	/// Handler returning Promise<HTTPResponseContentProvider>.
+	public init<C: HTTPResponseContentProvider>(methods m: [HTTPMethod] = [.get, .post],
+				uri u: String,
+				handler t: @escaping (InputType, Promise<C>) -> ()) {
+		methods = m
+		uri = u
+		typedHandler = nil
+		promiseHandler = {
+			req, resp in
+			_ = Promise<C> {
+				(promise: Promise<C>) in
+				let input: InputType = try req.getInput()
+				t(input, promise)
+			}.then {
+				content in
+				try content().provide(response: resp).completed()
+			}.when {
+				error in
+				resp.handleError(error: error)
+			}
+		}
 	}
 }
 

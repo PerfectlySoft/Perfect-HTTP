@@ -2,6 +2,7 @@ import XCTest
 import PerfectNet
 import PerfectLib
 import Foundation
+import PerfectThread
 @testable import PerfectHTTP
 
 #if os(Linux)
@@ -644,6 +645,70 @@ class PerfectHTTPTests: XCTestCase {
 		}
 	}
 	
+	func testTypedPromiseRoute() {
+		let expect1 = expectation(description: "wait1")
+		let expect2 = expectation(description: "wait2")
+		struct Body: Codable {
+			let msg: String
+		}
+		
+		func handleIt(req: HTTPRequest, promise: Promise<HTTPResponseContent<Body>>) {
+			DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+				promise.set(HTTPResponseContent(body: Body(msg: "Hi")))
+				DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+					expect1.fulfill()
+				}
+			}
+		}
+		
+		func failIt(req: HTTPRequest, promise: Promise<HTTPResponseContent<Body>>) {
+			DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+				promise.fail(HTTPResponseError(status: .badRequest, description: "Hi"))
+				DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+					expect2.fulfill()
+				}
+			}
+		}
+		
+		var routes = Routes() // root
+		routes.add(TRoute<HTTPRequest>(method: .get, uri: "/info", handler: handleIt))
+		routes.add(TRoute<HTTPRequest>(method: .get, uri: "/fail", handler: failIt))
+		
+		do {
+			let request = ShimHTTPRequest()
+			let response = ShimHTTPResponse()
+			response.request = request
+			request.method = .get
+			let handlers = routes.navigator.findHandlers(uri: "/info", webRequest: request)
+			XCTAssertNotNil(handlers)
+			XCTAssertNotEqual(handlers?.count, 0)
+			response.handlers = handlers
+			response.next()
+			
+			wait(for: [expect1], timeout: 10)
+			
+			XCTAssertEqual(response.header(.contentType), "application/json")
+			let decodeCheck = try? JSONDecoder().decode(Body.self, from: Data(bytes: response.bodyBytes))
+			XCTAssertNotNil(decodeCheck)
+		}
+		
+		do {
+			let request = ShimHTTPRequest()
+			let response = ShimHTTPResponse()
+			response.request = request
+			request.method = .get
+			let handlers = routes.navigator.findHandlers(uri: "/fail", webRequest: request)
+			XCTAssertNotNil(handlers)
+			XCTAssertNotEqual(handlers?.count, 0)
+			response.handlers = handlers
+			response.next()
+			
+			wait(for: [expect2], timeout: 10)
+			
+			XCTAssert(response.status.code == HTTPResponseStatus.badRequest.code)
+		}
+	}
+	
 	func testMimeTypeComparison() {
 		do {
 			let lhs = MimeType("text/plain")
@@ -704,7 +769,8 @@ class PerfectHTTPTests: XCTestCase {
 			("testRoutingTrailingSlash2", testRoutingTrailingSlash2),
 			("testRoutingTrailingSlash3", testRoutingTrailingSlash3),
 			("testRoutingTrailingSlash4", testRoutingTrailingSlash4),
-			("testTypedRoutes", testTypedRoutes)
+			("testTypedRoutes", testTypedRoutes),
+			("testTypedPromiseRoute", testTypedPromiseRoute)
         ]
     }
 }
