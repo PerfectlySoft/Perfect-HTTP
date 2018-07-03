@@ -70,3 +70,4 @@ docs/
 .DS_Store
 buildlinux
 Package.pins
+/Package.resolved
