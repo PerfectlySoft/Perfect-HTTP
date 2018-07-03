@@ -30,6 +30,7 @@ public enum HTTPRequestHeader {
         case xAuthorization, xForwardedFor, xForwardedHost, xForwardedProto
         case frontEndHttps, xHttpMethodOverride, xATTDeviceId, xWapProfile
         case proxyConnection, xUIDH, xCsrfToken, accessControlRequestMethod, accessControlRequestHeaders
+		case xB3TraceId, xB3SpanId, xB3ParentSpanId
         case custom(name: String)
         
         public var hashValue: Int {
@@ -87,6 +88,9 @@ public enum HTTPRequestHeader {
             case .proxyConnection: return "Proxy-Connection"
             case .xUIDH: return "X-UIDH"
             case .xCsrfToken: return "X-CSRF-Token"
+			case .xB3TraceId: return "X-B3-TraceId"
+			case .xB3SpanId: return "X-B3-SpanId"
+			case .xB3ParentSpanId: return "X-B3-ParentSpanId"
             case .custom(let str): return str
             }
         }
@@ -140,7 +144,10 @@ public enum HTTPRequestHeader {
             "x-wap-profile":.xWapProfile,
             "proxy-connection":.proxyConnection,
             "x-uidh":.xUIDH,
-            "x-csrf-token":.xCsrfToken
+			"x-csrf-token":.xCsrfToken,
+			"x-b3-traceid":.xB3TraceId,
+			"x-b3-spanid":.xB3SpanId,
+			"x-b3-parentspanid":.xB3ParentSpanId
         ]
         
         public static func fromStandard(name: String) -> HTTPRequestHeader.Name {
@@ -216,6 +223,9 @@ public enum HTTPResponseHeader {
         case upgradeInsecureRequests
         case xRequestID
         case xCorrelationID
+		case xB3TraceId
+		case xB3SpanId
+		case xB3ParentSpanId
         case custom(name: String)
         
         public var hashValue: Int {
@@ -280,6 +290,9 @@ public enum HTTPResponseHeader {
             case .upgradeInsecureRequests: return "Upgrade-Insecure-Requests"
             case .xRequestID: return "X-Request-ID"
             case .xCorrelationID: return "X-Correlation-ID"
+			case .xB3TraceId: return "X-B3-TraceId"
+			case .xB3SpanId: return "X-B3-SpanId"
+			case .xB3ParentSpanId: return "X-B3-ParentSpanId"
             case .custom(let str): return str
             }
         }
@@ -342,6 +355,10 @@ public enum HTTPResponseHeader {
             case "upgrade-insecure-requests": return .upgradeInsecureRequests
             case "x-request-id": return .xRequestID
             case "x-correlation-id": return .xCorrelationID
+			case "x-b3-traceid": return .xB3TraceId
+			case "x-b3-spanid": return .xB3SpanId
+			case "x-b3-parentspanid": return .xB3ParentSpanId
+
             default: return .custom(name: name)
             }
         }
