@@ -22,6 +22,8 @@
 #else
 	import Darwin
 #endif
+
+import PerfectLib
 import Foundation
 
 private let applicationJson = "application/json"
@@ -348,13 +350,23 @@ public extension HTTPResponse {
 	}
 	/// Encodes the Dictionary as a JSON string and converts that to a UTF-8 encoded [UInt8].
 	/// Adds the "application/json" content type unless `skipContentType` is true.
+//	@discardableResult
+//	func setBody(json: [String:Any], skipContentType: Bool = false) throws -> Self {
+//		let data = try JSONSerialization.data(withJSONObject: json)
+//		if !skipContentType {
+//			setHeader(.contentType, value: applicationJson)
+//		}
+//		return setBody(bytes: Array(data))
+//	}
+	/// Encodes the JSONConvertible as a JSON string and converts that to a UTF-8 encoded [UInt8].
+	/// Adds the "application/json" content type unless `skipContentType` is true.
 	@discardableResult
-	func setBody(json: [String:Any], skipContentType: Bool = false) throws -> Self {
-		let data = try JSONSerialization.data(withJSONObject: json)
+	func setBody(json: JSONConvertible, skipContentType: Bool = false) throws -> Self {
+		let string = try json.jsonEncodedString()
 		if !skipContentType {
 			setHeader(.contentType, value: applicationJson)
 		}
-		return setBody(bytes: Array(data))
+		return setBody(string: string)
 	}
 	/// Add a cookie to the outgoing response.
 	@discardableResult
