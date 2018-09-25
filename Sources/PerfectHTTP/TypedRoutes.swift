@@ -86,11 +86,11 @@ private let lastObjectKey = "_last_object_"
 /// Extensions on HTTPRequest which permit the request body to be decoded to a Codable type.
 public extension HTTPRequest {
 	/// Decode the request body into the desired type, or throw an error.
-	func decode<A: Codable>(_ type: A.Type) throws -> A {
+	func decode<A: Decodable>(_ type: A.Type) throws -> A {
 		return try decode()
 	}
 	/// Decode the request body into the desired type, or throw an error.
-	func decode<A: Codable>() throws -> A {
+	func decode<A: Decodable>() throws -> A {
 		if let contentType = header(.contentType), contentType.hasPrefix("application/json") {
 			guard let body = postBodyBytes else {
 				throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "This request requires JSON input."))
