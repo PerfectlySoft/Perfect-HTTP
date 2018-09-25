@@ -2,6 +2,7 @@ import XCTest
 import PerfectNet
 import PerfectLib
 import Foundation
+import Dispatch
 import PerfectThread
 @testable import PerfectHTTP
 
@@ -80,9 +81,8 @@ class ShimHTTPResponse: HTTPResponse {
 		}
 	}
 	func addCookie(_: PerfectHTTP.HTTPCookie) -> Self { return self }
-	func appendBody(bytes: [UInt8]) {}
-	func appendBody(string: String) {}
-	func setBody(json: [String:Any]) throws {}
+	func appendBody(bytes: [UInt8]) { bodyBytes.append(contentsOf: bytes) }
+	func appendBody(string: String) { appendBody(bytes: Array(string.utf8)) }
 	func push(callback: @escaping (Bool) -> ()) {}
 	func completed() {}
 	func next() {
@@ -746,6 +746,38 @@ class PerfectHTTPTests: XCTestCase {
 			XCTAssert(lhs != rhs)
 		}
 	}
+	
+	func testJSONBody() {
+		do {
+			let response = ShimHTTPResponse()
+			struct MyCodable: Encodable {
+				let id: Int
+				let name: String
+				let uu: Foundation.UUID
+				let d: Date
+			}
+			let mc = MyCodable(id: 1, name: "name", uu: UUID(), d: Date())
+			try response.setBody(json: mc)
+			
+			let t1 = response.bodyBytes
+			let t2 = try JSONEncoder().encode(mc)
+			XCTAssertEqual(t1, Array(t2))
+		} catch {
+			XCTFail("\(error)")
+		}
+		
+		do {
+			let response = ShimHTTPResponse()
+			let mc: [String:Any] = ["id": 1, "name": "name"]
+			try response.setBody(json: mc)
+			
+			let t1 = response.bodyBytes
+			let t2 = try JSONSerialization.data(withJSONObject: mc)
+			XCTAssertEqual(t1, Array(t2))
+		} catch {
+			XCTFail("\(error)")
+		}
+	}
 
     static var allTests : [(String, (PerfectHTTPTests) -> () throws -> Void)] {
         return [
@@ -770,7 +802,8 @@ class PerfectHTTPTests: XCTestCase {
 			("testRoutingTrailingSlash3", testRoutingTrailingSlash3),
 			("testRoutingTrailingSlash4", testRoutingTrailingSlash4),
 			("testTypedRoutes", testTypedRoutes),
-			("testTypedPromiseRoute", testTypedPromiseRoute)
+			("testTypedPromiseRoute", testTypedPromiseRoute),
+			("testJSONBody", testJSONBody)
         ]
     }
 }

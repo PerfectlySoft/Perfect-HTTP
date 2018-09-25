@@ -19,69 +19,69 @@
 
 /// HTTP request method types
 public enum HTTPMethod: Hashable, CustomStringConvertible {
-    /// OPTIONS
-    case options,
-    /// GET
-    get,
-    /// HEAD
-    head,
+	/// OPTIONS
+	case options,
+	/// GET
+	get,
+	/// HEAD
+	head,
 	/// POST
 	post,
 	/// PATCH
 	patch,
-    /// PUT
-    put,
-    /// DELETE
-    delete,
-    /// TRACE
-    trace,
-    /// CONNECT
-    connect,
-    /// Any unaccounted for or custom method
-    custom(String)
+	/// PUT
+	put,
+	/// DELETE
+	delete,
+	/// TRACE
+	trace,
+	/// CONNECT
+	connect,
+	/// Any unaccounted for or custom method
+	custom(String)
 	/// All non-custom methods
 	public static var allMethods: [HTTPMethod] {
 		return [.options, .get, .head, .post, .patch, .put, .delete, .trace, .connect]
 	}
 	
-    public static func from(string: String) -> HTTPMethod {
-        switch string {
-        case "OPTIONS": return .options
-        case "GET":     return .get
-        case "HEAD":    return .head
+	public static func from(string: String) -> HTTPMethod {
+		switch string {
+		case "OPTIONS": return .options
+		case "GET":     return .get
+		case "HEAD":    return .head
 		case "POST":    return .post
 		case "PATCH":   return .patch
-        case "PUT":     return .put
-        case "DELETE":  return .delete
-        case "TRACE":   return .trace
-        case "CONNECT": return .connect
-        default:        return .custom(string)
-        }
-    }
-    
-    /// Method String hash value
-    public var hashValue: Int {
-        return self.description.hashValue
-    }
-    
-    /// The method as a String
-    public var description: String {
-        switch self {
-        case .options:  return "OPTIONS"
-        case .get:      return "GET"
-        case .head:     return "HEAD"
+		case "PUT":     return .put
+		case "DELETE":  return .delete
+		case "TRACE":   return .trace
+		case "CONNECT": return .connect
+		default:        return .custom(string)
+		}
+	}
+	
+	/// Method String hash value
+	public var hashValue: Int {
+		return self.description.hashValue
+	}
+	
+	/// The method as a String
+	public var description: String {
+		switch self {
+		case .options:  return "OPTIONS"
+		case .get:      return "GET"
+		case .head:     return "HEAD"
 		case .post:     return "POST"
 		case .patch:    return "PATCH"
-        case .put:      return "PUT"
-        case .delete:   return "DELETE"
-        case .trace:    return "TRACE"
-        case .connect:  return "CONNECT"
-        case .custom(let s): return s
-        }
-    }
+		case .put:      return "PUT"
+		case .delete:   return "DELETE"
+		case .trace:    return "TRACE"
+		case .connect:  return "CONNECT"
+		case .custom(let s): return s
+		}
+	}
 }
 
 /// Compare two HTTP methods
 public func == (lhs: HTTPMethod, rhs: HTTPMethod) -> Bool {
-    return lhs.description == rhs.description
+	return lhs.description == rhs.description
 }

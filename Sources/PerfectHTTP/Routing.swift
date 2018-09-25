@@ -393,7 +393,7 @@ class RouteNode {
 		}
 		return nil
 	}
-
+	
 	func getNode(_ ing: ComponentGenerator) throws -> RouteNode {
 		var g = ing
 		if let comp = g.next() {

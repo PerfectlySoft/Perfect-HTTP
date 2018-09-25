@@ -22,7 +22,7 @@
 #else
 	import Darwin
 #endif
-import PerfectLib
+import Foundation
 
 private let applicationJson = "application/json"
 
@@ -336,15 +336,25 @@ public extension HTTPResponse {
 		bodyBytes.removeAll()
 		return appendBody(string: string)
 	}
-	/// Encodes the Dictionary as a JSON string and converts that to a UTF-8 encoded [UInt8].
+	/// Encodes the Codable as a JSON string and converts that to a UTF-8 encoded [UInt8].
 	/// Adds the "application/json" content type unless `skipContentType` is true.
 	@discardableResult
-	func setBody(json: JSONConvertible, skipContentType: Bool = false) throws -> Self {
-		let string = try json.jsonEncodedString()
+	func setBody<T: Encodable>(json: T, skipContentType: Bool = false) throws -> Self {
+		let data = try JSONEncoder().encode(json)
 		if !skipContentType {
 			setHeader(.contentType, value: applicationJson)
 		}
-		return setBody(string: string)
+		return setBody(bytes: Array(data))
+	}
+	/// Encodes the Dictionary as a JSON string and converts that to a UTF-8 encoded [UInt8].
+	/// Adds the "application/json" content type unless `skipContentType` is true.
+	@discardableResult
+	func setBody(json: [String:Any], skipContentType: Bool = false) throws -> Self {
+		let data = try JSONSerialization.data(withJSONObject: json)
+		if !skipContentType {
+			setHeader(.contentType, value: applicationJson)
+		}
+		return setBody(bytes: Array(data))
 	}
 	/// Add a cookie to the outgoing response.
 	@discardableResult
