@@ -646,8 +646,7 @@ class PerfectHTTPTests: XCTestCase {
 	}
 	
 	func testTypedPromiseRoute() {
-		let expect1 = expectation(description: "wait1")
-		let expect2 = expectation(description: "wait2")
+		var expect = expectation(description: "wait1")
 		struct Body: Codable {
 			let msg: String
 		}
@@ -656,7 +655,7 @@ class PerfectHTTPTests: XCTestCase {
 			DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
 				promise.set(HTTPResponseContent(body: Body(msg: "Hi")))
 				DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
-					expect1.fulfill()
+					expect.fulfill()
 				}
 			}
 		}
@@ -665,7 +664,7 @@ class PerfectHTTPTests: XCTestCase {
 			DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
 				promise.fail(HTTPResponseError(status: .badRequest, description: "Hi"))
 				DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
-					expect2.fulfill()
+					expect.fulfill()
 				}
 			}
 		}
@@ -684,14 +683,15 @@ class PerfectHTTPTests: XCTestCase {
 			XCTAssertNotEqual(handlers?.count, 0)
 			response.handlers = handlers
 			response.next()
-			
-			wait(for: [expect1], timeout: 10)
-			
+      		self.waitForExpectations(timeout: 10) { _ in }
+
 			XCTAssertEqual(response.header(.contentType), "application/json")
 			let decodeCheck = try? JSONDecoder().decode(Body.self, from: Data(bytes: response.bodyBytes))
 			XCTAssertNotNil(decodeCheck)
 		}
-		
+
+    	expect = expectation(description: "wait2")
+
 		do {
 			let request = ShimHTTPRequest()
 			let response = ShimHTTPResponse()
@@ -703,8 +703,8 @@ class PerfectHTTPTests: XCTestCase {
 			response.handlers = handlers
 			response.next()
 			
-			wait(for: [expect2], timeout: 10)
-			
+			self.waitForExpectations(timeout: 10) { _ in }
+
 			XCTAssert(response.status.code == HTTPResponseStatus.badRequest.code)
 		}
 	}
