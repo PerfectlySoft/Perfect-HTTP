@@ -746,6 +746,10 @@ class PerfectHTTPTests: XCTestCase {
 			XCTAssert(lhs != rhs)
 		}
 	}
+
+	func testMimeForExtension() {
+		XCTAssert(MimeType.forExtension("ts") == "video/mp2t")
+	}
 	
 	func testJSONBody() {
 		do {
@@ -795,6 +799,7 @@ class PerfectHTTPTests: XCTestCase {
 			("testRoutingTrailingWild2", testRoutingTrailingWild2),
 			("testFormatDate", testFormatDate),
 			("testMimeTypeComparison", testMimeTypeComparison),
+			("testMimeForExtension", testMimeForExtension),
 			("testRoutingMulti1", testRoutingMulti1),
 			("testRoutingMulti2", testRoutingMulti2),
 			("testRoutingTrailingSlash1", testRoutingTrailingSlash1),
