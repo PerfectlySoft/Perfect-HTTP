@@ -111,7 +111,7 @@ public final class MimeReader {
 	/// - parameter tempDir: The path to the directory in which to store temporary files. Defaults to "/tmp/".
 	public init(_ contentType: String, tempDir: String = "/tmp/") {
 		self.tempDirectory = tempDir
-		if contentType.range(of: kMultiPartForm) != nil {
+		if contentType.hasPrefix(kMultiPartForm) {
 			self.multi = true
 			if let range = contentType.range(of: kBoundary) {
 				
