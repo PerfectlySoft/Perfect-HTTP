@@ -30,7 +30,7 @@ import COpenSSL
 extension String.UTF8View {
 	var sha1: [UInt8] {
 		let bytes = UnsafeMutablePointer<UInt8>.allocate(capacity:  Int(SHA_DIGEST_LENGTH))
-		defer { bytes.deallocate(capacity: Int(SHA_DIGEST_LENGTH)) }
+		defer { bytes.deallocate() }
 		
 		SHA1(Array<UInt8>(self), (self.count), bytes)
 		
@@ -305,7 +305,7 @@ public struct StaticFileHandler {
 			return [Range<Int>]()
 		}
 		let ranges = initialSplit[1]
-		return ranges.split(separator: "/").flatMap { self.parseOneRange(fromString: String($0), max: max) }
+		return ranges.split(separator: "/").compactMap { self.parseOneRange(fromString: String($0), max: max) }
 	}
 	
 	// 0-3

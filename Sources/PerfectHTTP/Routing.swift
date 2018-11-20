@@ -188,7 +188,7 @@ public struct Routes {
 			guard let handlers = root.findHandler(currentComponent: "", generator: g, webRequest: webRequest) else {
 				return nil
 			}
-			return handlers.flatMap { $0 }
+			return handlers.compactMap { $0 }
 		}
 	}
 	
@@ -305,7 +305,7 @@ private enum RouteItemType {
 		} else if comp == "/" {
 			self = .trailingSlash
 		} else if comp.count >= 3 && comp[comp.startIndex] == "{" && comp[comp.index(before: comp.endIndex)] == "}" {
-			self = .variable(comp[comp.index(after: comp.startIndex)..<comp.index(before: comp.endIndex)])
+			self = .variable(String(comp[comp.index(after: comp.startIndex)..<comp.index(before: comp.endIndex)]))
 		} else {
 			self = .path
 		}
@@ -316,7 +316,7 @@ class RouteNode {
 	
 	typealias ComponentGenerator = IndexingIterator<[String]>
 	
-	var handler: RouteMap.RequestHandler?
+	var handler: RequestHandler?
 	var trailingWildCard: RouteNode?
 	var wildCard: RouteNode?
 	var variables = [RouteNode]()
@@ -332,7 +332,7 @@ class RouteNode {
 		return s
 	}
 	
-	func appendToHandlers(_ handlers: [RouteMap.RequestHandler?]) -> [RouteMap.RequestHandler?] {
+	func appendToHandlers(_ handlers: [RequestHandler?]) -> [RequestHandler?] {
 		// terminal handlers are not included in chaining
 		if terminal {
 			return handlers
@@ -340,7 +340,7 @@ class RouteNode {
 		return [handler] + handlers
 	}
 	
-	func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> [RouteMap.RequestHandler?]? {
+	func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> [RequestHandler?]? {
 		var m = generator
 		if let p = m.next() {
 			// variables
@@ -428,7 +428,7 @@ class RouteNode {
 					subNodes[compLower] = node
 				}
 			case .variable(let name):
-				let dups = variables.flatMap { $0 as? RouteVariable }.filter { $0.name == name }
+				let dups = variables.compactMap { $0 as? RouteVariable }.filter { $0.name == name }
 				if dups.isEmpty {
 					let varble = RouteVariable(name: name)
 					variables.append(varble)
@@ -525,7 +525,7 @@ class RouteTrailingWildCard: RouteWildCard {
 		return s
 	}
 	
-	override func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> [RouteMap.RequestHandler?]? {
+	override func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> [RequestHandler?]? {
 		let trailingVar = "/\(curComp)" + generator.map { "/" + $0 }.joined(separator: "")
 		webRequest.urlVariables[routeTrailingWildcardKey] = trailingVar
 		if let handler = self.handler {
@@ -548,7 +548,7 @@ class RouteTrailingSlash: RouteNode {
 		return s
 	}
 	
-	override func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> [RouteMap.RequestHandler?]? {
+	override func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> [RequestHandler?]? {
 		var m = generator
 		guard curComp == "/", nil == m.next(), let handler = self.handler else {
 			return nil
@@ -575,7 +575,7 @@ class RouteVariable: RouteNode {
 		return s
 	}
 	
-	override func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> [RouteMap.RequestHandler?]? {
+	override func findHandler(currentComponent curComp: String, generator: ComponentGenerator, webRequest: HTTPRequest) -> [RequestHandler?]? {
 		if let h = super.findHandler(currentComponent: curComp, generator: generator, webRequest: webRequest) {
 			if let decodedComponent = curComp.stringByDecodingURL {
 				webRequest.urlVariables[self.name] = decodedComponent

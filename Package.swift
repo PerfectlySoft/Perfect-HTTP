@@ -33,9 +33,8 @@ let package = Package(
 	],
  	targets: [
 		.target(name: "PerfectHTTP", dependencies: ["PerfectLib", "PerfectNet", "LinuxBridge"]),
-		.testTarget(name: "PerfectHTTPTests", dependencies: ["PerfectHTTP"])
-  ],
-  swiftLanguageVersions: [3]
+		.testTarget(name: "PerfectHTTPTests", dependencies: ["PerfectHTTP", "PerfectNet"])
+  ]
 )
 #else
 let package = Package(
@@ -48,8 +47,7 @@ let package = Package(
 		.package(url: "https://github.com/PerfectlySoft/Perfect-Net.git", from: "3.0.0")
 	], targets: [
 		.target(name: "PerfectHTTP", dependencies: ["PerfectLib", "PerfectNet"]),
-		.testTarget(name: "PerfectHTTPTests", dependencies: ["PerfectHTTP"])
-  ],
-  swiftLanguageVersions: [3]
+		.testTarget(name: "PerfectHTTPTests", dependencies: ["PerfectHTTP", "PerfectNet"])
+  ]
 )
 #endif

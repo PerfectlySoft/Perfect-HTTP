@@ -434,7 +434,7 @@ extension Double {
 		let maxResults = 1024
 		let results = UnsafeMutablePointer<Int8>.allocate(capacity: maxResults)
 		defer {
-			results.deallocate(capacity: maxResults)
+			results.deallocate()
 		}
 		let res = strftime(results, maxResults, format, &t)
 		if res > 0 {
