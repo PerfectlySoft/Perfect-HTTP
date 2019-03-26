@@ -63,9 +63,6 @@ public enum HTTPMethod: Hashable, CustomStringConvertible {
 	public var hashValue: Int {
 		return description.hashValue
 	}
-	public func hash(into hasher: inout Hasher) {
-		hasher.combine(description.hashValue)
-	}
 	
 	/// The method as a String
 	public var description: String {

@@ -36,9 +36,6 @@ public enum HTTPRequestHeader {
 		public var hashValue: Int {
 			return standardName.lowercased().hashValue
 		}
-		public func hash(into hasher: inout Hasher) {
-			hasher.combine(standardName.lowercased().hashValue)
-		}
 		
 		public var standardName: String {
 			switch self {
