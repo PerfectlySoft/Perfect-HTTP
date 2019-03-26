@@ -34,7 +34,10 @@ public enum HTTPRequestHeader {
 		case custom(name: String)
 		
 		public var hashValue: Int {
-			return self.standardName.lowercased().hashValue
+			return standardName.lowercased().hashValue
+		}
+		public func hash(into hasher: inout Hasher) {
+			hasher.combine(standardName.lowercased().hashValue)
 		}
 		
 		public var standardName: String {

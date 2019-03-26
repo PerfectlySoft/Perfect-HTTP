@@ -355,21 +355,21 @@ public struct TRoute<I>: TypedRouteProtocol {
 public extension TRoutes {
 	/// Add a route to this object. The new route will take the output of this route as its input.
 	@discardableResult
-	public mutating func add<N: Codable>(method m: HTTPMethod,
+	mutating func add<N: Codable>(method m: HTTPMethod,
 										 uri u: String,
 										 handler t: @escaping (OutputType) throws -> N) -> TRoutes {
 		return add(TRoute(method: m, uri: u, handler: t))
 	}
 	/// Add a route to this object. The new route will take the output of this route as its input.
 	@discardableResult
-	public mutating func add(method m: HTTPMethod,
+	mutating func add(method m: HTTPMethod,
 										 uri u: String,
 										 handler t: @escaping (OutputType) throws -> ()) -> TRoutes {
 		return add(TRoute(method: m, uri: u, handler: t))
 	}
 	/// Add a route to this object. The new route will take the output of this route as its input.
 	@discardableResult
-	public mutating func add<P: HTTPResponseContentProvider>(method m: HTTPMethod,
+	mutating func add<P: HTTPResponseContentProvider>(method m: HTTPMethod,
 										 uri u: String,
 										 handler t: @escaping (OutputType) throws -> P) -> TRoutes {
 		return add(TRoute(method: m, uri: u, handler: t))

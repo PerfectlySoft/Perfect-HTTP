@@ -89,7 +89,7 @@ public extension HTTPRequest {
 	
 	/// Returns the first GET or POST parameter with the given name.
 	/// Returns the supplied default value if the parameter was not found.
-	public func param(name: String, defaultValue: String? = nil) -> String? {
+	func param(name: String, defaultValue: String? = nil) -> String? {
 		for p in self.queryParams
 			where p.0 == name {
 				return p.1
@@ -102,13 +102,13 @@ public extension HTTPRequest {
 	}
 	
 	/// Returns all GET or POST parameters with the given name.
-	public func params(named: String) -> [String] {
+	func params(named: String) -> [String] {
 		let a = self.params().filter { $0.0 == named }.map { $0.1 }
 		return a
 	}
 	
 	/// Returns all GET or POST parameters.
-	public func params() -> [(String, String)] {
+	func params() -> [(String, String)] {
 		let a = self.queryParams + self.postParams
 		return a
 	}
@@ -116,14 +116,14 @@ public extension HTTPRequest {
 
 public extension HTTPRequest {
 	/// Returns the full request URI.
-	public var uri: String {
+	var uri: String {
 		if self.queryParams.count == 0 {
 			return self.path
 		}
 		return "\(self.path)?\(self.queryParams.map { return "\($0.0.stringByEncodingURL)=\($0.1.stringByEncodingURL)" }.joined(separator: "&"))"
 	}
 	/// Returns all the cookie name/value pairs parsed from the request.
-	public var cookies: [(String, String)] {
+	var cookies: [(String, String)] {
 		guard let cookie = self.header(.cookie) else {
 			return [(String, String)]()
 		}
