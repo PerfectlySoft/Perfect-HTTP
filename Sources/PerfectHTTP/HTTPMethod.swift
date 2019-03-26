@@ -59,11 +59,6 @@ public enum HTTPMethod: Hashable, CustomStringConvertible {
 		}
 	}
 	
-	/// Method String hash value
-	public var hashValue: Int {
-		return description.hashValue
-	}
-	
 	/// The method as a String
 	public var description: String {
 		switch self {

@@ -33,10 +33,6 @@ public enum HTTPRequestHeader {
 		case xB3TraceId, xB3SpanId, xB3ParentSpanId
 		case custom(name: String)
 		
-		public var hashValue: Int {
-			return standardName.lowercased().hashValue
-		}
-		
 		public var standardName: String {
 			switch self {
 			case .accept: return "Accept"
@@ -166,7 +162,7 @@ public func ==(lhs: HTTPRequestHeader.Name, rhs: HTTPRequestHeader.Name) -> Bool
 /// A HTTP response header.
 public enum HTTPResponseHeader {
 	
-	public enum Name {
+	public enum Name: Hashable {
 		case accessControlAllowOrigin
 		case accessControlAllowMethods
 		case accessControlAllowCredentials
@@ -227,10 +223,6 @@ public enum HTTPResponseHeader {
 		case xB3SpanId
 		case xB3ParentSpanId
 		case custom(name: String)
-		
-		public var hashValue: Int {
-			return self.standardName.lowercased().hashValue
-		}
 		
 		public var standardName: String {
 			switch self {
