@@ -228,6 +228,10 @@ public enum HTTPResponseHeader {
 		case xB3ParentSpanId
 		case custom(name: String)
 		
+		public var hashValue: Int {
+			return standardName.lowercased().hashValue
+		}
+		
 		public var standardName: String {
 			switch self {
 			case .accessControlAllowOrigin: return "Access-Control-Allow-Origin"
