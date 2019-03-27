@@ -784,9 +784,16 @@ class PerfectHTTPTests: XCTestCase {
 	}
 	
 	func testHeaderHashValue() {
-		let h1 = HTTPRequestHeader.Name.custom(name: "X-Foo")
-		let h2 = HTTPRequestHeader.Name.custom(name: "X-Foo2")
-		XCTAssertNotEqual(h1.hashValue, h2.hashValue)
+		do {
+			let h1 = HTTPRequestHeader.Name.custom(name: "X-Foo")
+			let h2 = HTTPRequestHeader.Name.custom(name: "X-Foo2")
+			XCTAssertNotEqual(h1.hashValue, h2.hashValue)
+		}
+		do {
+			let h1 = HTTPResponseHeader.Name.custom(name: "X-Foo")
+			let h2 = HTTPResponseHeader.Name.custom(name: "X-Foo2")
+			XCTAssertNotEqual(h1.hashValue, h2.hashValue)
+		}
 	}
 	
 	func testMethodHashValue() {
