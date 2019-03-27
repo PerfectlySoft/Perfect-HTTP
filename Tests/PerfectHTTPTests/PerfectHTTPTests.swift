@@ -782,6 +782,18 @@ class PerfectHTTPTests: XCTestCase {
 			XCTFail("\(error)")
 		}
 	}
+	
+	func testHeaderHashValue() {
+		let h1 = HTTPRequestHeader.Name.custom(name: "X-Foo")
+		let h2 = HTTPRequestHeader.Name.custom(name: "X-Foo2")
+		XCTAssertNotEqual(h1.hashValue, h2.hashValue)
+	}
+	
+	func testMethodHashValue() {
+		let h1 = HTTPMethod.custom("X-Foo")
+		let h2 = HTTPMethod.custom("X-Foo2")
+		XCTAssertNotEqual(h1.hashValue, h2.hashValue)
+	}
 
     static var allTests : [(String, (PerfectHTTPTests) -> () throws -> Void)] {
         return [
@@ -808,7 +820,9 @@ class PerfectHTTPTests: XCTestCase {
 			("testRoutingTrailingSlash4", testRoutingTrailingSlash4),
 			("testTypedRoutes", testTypedRoutes),
 			("testTypedPromiseRoute", testTypedPromiseRoute),
-			("testJSONBody", testJSONBody)
+			("testJSONBody", testJSONBody),
+			("testHeaderHashValue", testHeaderHashValue),
+			("testMethodHashValue", testMethodHashValue),
         ]
     }
 }

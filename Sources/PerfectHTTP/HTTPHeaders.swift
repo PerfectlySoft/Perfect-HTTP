@@ -33,6 +33,10 @@ public enum HTTPRequestHeader {
 		case xB3TraceId, xB3SpanId, xB3ParentSpanId
 		case custom(name: String)
 		
+		public var hashValue: Int {
+			return standardName.lowercased().hashValue
+		}
+		
 		public var standardName: String {
 			switch self {
 			case .accept: return "Accept"
