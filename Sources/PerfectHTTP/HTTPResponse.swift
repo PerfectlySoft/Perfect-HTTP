@@ -339,10 +339,11 @@ public extension HTTPResponse {
 		return appendBody(string: string)
 	}
 	/// Encodes the Codable as a JSON string and converts that to a UTF-8 encoded [UInt8].
+    /// Uses a default JSONEncoder in case none is specified.
 	/// Adds the "application/json" content type unless `skipContentType` is true.
 	@discardableResult
-	func setBody<T: Encodable>(json: T, skipContentType: Bool = false) throws -> Self {
-		let data = try JSONEncoder().encode(json)
+    func setBody<T: Encodable>(json: T, encoder: JSONEncoder = JSONEncoder(), skipContentType: Bool = false) throws -> Self {
+		let data = try encoder.encode(json)
 		if !skipContentType {
 			setHeader(.contentType, value: applicationJson)
 		}
