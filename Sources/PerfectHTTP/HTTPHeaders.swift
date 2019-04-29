@@ -33,9 +33,15 @@ public enum HTTPRequestHeader {
 		case xB3TraceId, xB3SpanId, xB3ParentSpanId
 		case custom(name: String)
 		
-		public var hashValue: Int {
-			return standardName.lowercased().hashValue
-		}
+		#if swift(>=4.2)
+			public func hash(into hasher: inout Hasher) {
+				hasher.combine(standardName.lowercased())
+			}
+		#else
+			public var hashValue: Int {
+				return standardName.lowercased().hashValue
+			}
+		#endif
 		
 		public var standardName: String {
 			switch self {
@@ -228,9 +234,15 @@ public enum HTTPResponseHeader {
 		case xB3ParentSpanId
 		case custom(name: String)
 		
-		public var hashValue: Int {
-			return standardName.lowercased().hashValue
-		}
+		#if swift(>=4.2)
+			public func hash(into hasher: inout Hasher) {
+				hasher.combine(standardName.lowercased())
+			}
+		#else
+			public var hashValue: Int {
+				return standardName.lowercased().hashValue
+			}
+		#endif
 		
 		public var standardName: String {
 			switch self {

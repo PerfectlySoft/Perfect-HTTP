@@ -99,14 +99,14 @@ public extension HTTPRequest {
 			// fudging url vars and json post body is inefficient
 			let data: Data
 			if !urlVariables.isEmpty,
-				var dict = try JSONSerialization.jsonObject(with: Data(bytes: body), options: []) as? [String:Any] {
+				var dict = try JSONSerialization.jsonObject(with: Data(body), options: []) as? [String:Any] {
 				urlVariables.forEach {
 					let (key, value) = $0
 					dict[key] = value
 				}
 				data = try JSONSerialization.data(withJSONObject: dict, options: [])
 			} else {
-				data = Data(bytes: body)
+				data = Data(body)
 			}
 			do {
 				return try JSONDecoder().decode(A.self, from: data)
