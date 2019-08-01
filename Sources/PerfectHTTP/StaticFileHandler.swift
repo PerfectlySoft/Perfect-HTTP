@@ -57,17 +57,19 @@ extension UInt8 {
 /// A web request handler which can be used to return static disk-based files to the client.
 /// Supports byte ranges, ETags and streaming very large files.
 public struct StaticFileHandler {
+	static public let defaultChunkedBufferSize = 1024*200
 	
-	let chunkedBufferSize = 1024*200
+	let chunkedBufferSize: Int
 	let documentRoot: String
 	let allowResponseFilters: Bool
 	
 	/// Public initializer given a document root.
 	/// If allowResponseFilters is false (which is the default) then the file will be sent in
 	/// the most effecient way possible and output filters will be bypassed.
-	public init(documentRoot: String, allowResponseFilters: Bool = false) {
+	public init(documentRoot: String, allowResponseFilters: Bool = false, chunkedBufferSize: Int = defaultChunkedBufferSize) {
 		self.documentRoot = documentRoot
 		self.allowResponseFilters = allowResponseFilters
+		self.chunkedBufferSize = chunkedBufferSize
 	}
 	
 	/// Main entry point. A registered URL handler should call this and pass the request and response objects.
