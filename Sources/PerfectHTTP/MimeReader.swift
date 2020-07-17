@@ -359,26 +359,29 @@ public final class MimeReader {
 					}
 					// write as much data as we reasonably can
 					var writeEnd = position
-					let qPtr = UnsafePointer<UInt8>(byts)
-					while writeEnd < end {
-						
-						if qPtr[writeEnd] == mime_cr {
-							if end - writeEnd < 2 {
-								break
-							}
-							if qPtr[writeEnd + 1] == mime_lf {
-								if isBoundaryStart(bytes: byts, start: writeEnd + 2) {
-									break
-								} else if end - writeEnd - 2 < self.boundary.count {
-									// we are at the eol, but check to see if the next line may be starting a boundary
-									if end - writeEnd < 4 || (qPtr[writeEnd + 2] == mime_dash && qPtr[writeEnd + 3] == mime_dash) {
+					byts.withUnsafeBufferPointer { buffered in
+						if let qPtr = buffered.baseAddress {
+							while writeEnd < end {
+
+								if qPtr[writeEnd] == mime_cr {
+									if end - writeEnd < 2 {
 										break
 									}
+									if qPtr[writeEnd + 1] == mime_lf {
+										if isBoundaryStart(bytes: byts, start: writeEnd + 2) {
+											break
+										} else if end - writeEnd - 2 < self.boundary.count {
+											// we are at the eol, but check to see if the next line may be starting a boundary
+											if end - writeEnd < 4 || (qPtr[writeEnd + 2] == mime_dash && qPtr[writeEnd + 3] == mime_dash) {
+												break
+											}
+										}
+									}
 								}
+
+								writeEnd += 1
 							}
 						}
-						
-						writeEnd += 1
 					}
 					do {
 						let length = writeEnd - position
