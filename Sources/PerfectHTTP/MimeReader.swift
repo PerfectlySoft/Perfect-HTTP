@@ -359,7 +359,7 @@ public final class MimeReader {
 					}
 					// write as much data as we reasonably can
 					var writeEnd = position
-					let qPtr = UnsafePointer<UInt8>(byts)
+                    let qPtr = byts.withUnsafeBufferPointer { $0.baseAddress! }
 					while writeEnd < end {
 						
 						if qPtr[writeEnd] == mime_cr {

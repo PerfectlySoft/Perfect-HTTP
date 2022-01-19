@@ -601,7 +601,7 @@ class PerfectHTTPTests: XCTestCase {
 			response.handlers = handlers
 			response.next()
 			XCTAssertEqual(response.header(.contentType), "application/json")
-			let decodeCheck = try? JSONDecoder().decode(RequestResponse.self, from: Data(bytes: response.bodyBytes))
+			let decodeCheck = try? JSONDecoder().decode(RequestResponse.self, from: Data(response.bodyBytes))
 			XCTAssertNotNil(decodeCheck)
 		}
 		do {
@@ -627,7 +627,7 @@ class PerfectHTTPTests: XCTestCase {
 			response.handlers = handlers
 			response.next()
 			XCTAssertEqual(response.header(.contentType), "foo/bar")
-			let decodeCheck = try? JSONDecoder().decode(RequestResponse.self, from: Data(bytes: response.bodyBytes))
+			let decodeCheck = try? JSONDecoder().decode(RequestResponse.self, from: Data(response.bodyBytes))
 			XCTAssertNotNil(decodeCheck)
 		}
 		do {
@@ -686,7 +686,7 @@ class PerfectHTTPTests: XCTestCase {
       		self.waitForExpectations(timeout: 10) { _ in }
 
 			XCTAssertEqual(response.header(.contentType), "application/json")
-			let decodeCheck = try? JSONDecoder().decode(Body.self, from: Data(bytes: response.bodyBytes))
+			let decodeCheck = try? JSONDecoder().decode(Body.self, from: Data(response.bodyBytes))
 			XCTAssertNotNil(decodeCheck)
 		}
 
