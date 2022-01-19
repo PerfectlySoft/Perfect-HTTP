@@ -22,7 +22,7 @@ import PerfectNet
 
 /// An HTTP based request object.
 /// Contains all HTTP header and content data submitted by the client.
-public protocol HTTPRequest: class {
+public protocol HTTPRequest: AnyObject {
 	/// The HTTP request method.
 	var method: HTTPMethod { get set }
 	/// The request path.

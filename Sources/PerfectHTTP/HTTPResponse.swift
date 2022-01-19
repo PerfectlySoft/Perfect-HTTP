@@ -273,7 +273,7 @@ public struct HTTPCookie {
 
 /// An HTTP based response object.
 /// Contains all header and body data which will be delivered to the client.
-public protocol HTTPResponse: class {
+public protocol HTTPResponse: AnyObject {
 	/// The request object which instigated this response.
 	var request: HTTPRequest { get }
 	/// The HTTP response status.
